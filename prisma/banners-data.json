@@ -1,0 +1,124 @@
+[
+  {
+    "title": "BUILD STRENGTH. FUEL YOUR BEST SELF.",
+    "subtitle": "Premium Whey Protein for Lean Muscle, Faster Recovery & Peak Performance.",
+    "image": "/uploads/banners/banner-product-2.png",
+    "ctaText": "SHOP WHEY PROTEIN",
+    "type": "HOME_PRODUCT",
+    "targetType": "PRODUCT",
+    "status": "ACTIVE",
+    "sortOrder": 1
+  },
+  {
+    "title": "TRANSFORM YOUR STRENGTH ELEVATE YOUR LIFE",
+    "subtitle": "Premium Supplements. Backed by Science. Proven by Results.",
+    "image": "/uploads/banners/banner-product-1.png",
+    "ctaText": "SHOP NOW",
+    "type": "HOME_PRODUCT",
+    "targetType": "PRODUCT",
+    "status": "ACTIVE",
+    "sortOrder": 2
+  },
+  {
+    "title": "Welcome to Sculpt & Shine",
+    "subtitle": "Your Fitness Journey Starts Here",
+    "image": "/assets/hero_bundle.png",
+    "ctaText": "EXPLORE ALL",
+    "type": "HOME_GENERAL",
+    "targetType": "NONE",
+    "status": "ACTIVE",
+    "sortOrder": 1
+  },
+  {
+    "title": "New Arrivals 2026",
+    "subtitle": "Check out our latest supplements",
+    "image": "/assets/iso_whey.png",
+    "ctaText": "VIEW NEW ARRIVALS",
+    "type": "HOME_GENERAL",
+    "targetType": "NONE",
+    "status": "ACTIVE",
+    "sortOrder": 2
+  },
+  {
+    "title": "Category Highlights",
+    "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1600&h=400&fit=crop",
+    "type": "CATEGORY_HEADER",
+    "targetType": "CATEGORY",
+    "status": "ACTIVE",
+    "sortOrder": 1
+  },
+  {
+    "title": "More in Categories",
+    "image": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=1600&h=400&fit=crop",
+    "type": "CATEGORY_HEADER",
+    "targetType": "CATEGORY",
+    "status": "ACTIVE",
+    "sortOrder": 2
+  },
+  {
+    "title": "Premium Brands",
+    "image": "https://images.unsplash.com/photo-1526506114842-70b9983de3d2?w=1600&h=400&fit=crop",
+    "type": "BRAND_HEADER",
+    "targetType": "BRAND",
+    "status": "ACTIVE",
+    "sortOrder": 1
+  },
+  {
+    "title": "Trusted Partners",
+    "image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1600&h=400&fit=crop",
+    "type": "BRAND_HEADER",
+    "targetType": "BRAND",
+    "status": "ACTIVE",
+    "sortOrder": 2
+  },
+  {
+    "title": "Login to Your Account",
+    "image": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&h=1200&fit=crop",
+    "type": "LOGIN_BG",
+    "targetType": "NONE",
+    "status": "ACTIVE",
+    "sortOrder": 1
+  },
+  {
+    "title": "Welcome Back",
+    "image": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&h=1200&fit=crop",
+    "type": "LOGIN_BG",
+    "targetType": "NONE",
+    "status": "ACTIVE",
+    "sortOrder": 2
+  },
+  {
+    "title": "Join Sculpt & Shine",
+    "image": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=800&h=1200&fit=crop",
+    "type": "SIGNUP_BG",
+    "targetType": "NONE",
+    "status": "ACTIVE",
+    "sortOrder": 1
+  },
+  {
+    "title": "Start Your Transformation",
+    "image": "https://images.unsplash.com/photo-1534438097544-adcc6911c759?w=800&h=1200&fit=crop",
+    "type": "SIGNUP_BG",
+    "targetType": "NONE",
+    "status": "ACTIVE",
+    "sortOrder": 2
+  },
+  {
+    "title": "Summer Sale",
+    "subtitle": "Get up to 30% off",
+    "image": "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1600&h=400&fit=crop",
+    "type": "PROMO",
+    "targetType": "NONE",
+    "status": "ACTIVE",
+    "sortOrder": 1
+  },
+  {
+    "title": "Flash Deal",
+    "subtitle": "Next 24 hours only",
+    "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1600&h=400&fit=crop",
+    "type": "PROMO",
+    "targetType": "NONE",
+    "status": "ACTIVE",
+    "sortOrder": 2
+  }
+]

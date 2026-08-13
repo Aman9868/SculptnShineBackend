@@ -660,6 +660,49 @@ async function seedReviewsAndGuides() {
   }
 }
 
+async function seedBanners() {
+  console.log(`\n🖼️  Seeding Banners...`);
+  
+  await prisma.banner.deleteMany({});
+  
+  const bannersPath = path.join(__dirname, 'banners-data.json');
+  if (!fs.existsSync(bannersPath)) {
+    console.warn(`⚠️ Warning: Seed file not found at ${bannersPath}`);
+    return;
+  }
+
+  const rawData = fs.readFileSync(bannersPath, 'utf-8');
+  const bannersData = JSON.parse(rawData);
+
+  // Fetch some random targets to link
+  const products = await prisma.product.findMany({ take: 5 });
+  const categories = await prisma.productCategory.findMany({ take: 5 });
+  const brands = await prisma.productBrand.findMany({ take: 5 });
+
+  let productIndex = 0;
+  let categoryIndex = 0;
+  let brandIndex = 0;
+
+  for (const b of bannersData) {
+    const data: any = { ...b };
+    
+    if (data.targetType === 'PRODUCT' && products.length > 0) {
+      data.productId = products[productIndex % products.length].id;
+      productIndex++;
+    } else if (data.targetType === 'CATEGORY' && categories.length > 0) {
+      data.categoryId = categories[categoryIndex % categories.length].id;
+      categoryIndex++;
+    } else if (data.targetType === 'BRAND' && brands.length > 0) {
+      data.brandId = brands[brandIndex % brands.length].id;
+      brandIndex++;
+    }
+
+    await prisma.banner.create({ data });
+  }
+
+  console.log(`  ✅ Seeded ${bannersData.length} Banners`);
+}
+
 async function main() {
   const isSeedEnabled = process.env.ENABLE_SEED === 'true' || process.env.RUN_SEED === 'true';
 
@@ -676,6 +719,7 @@ async function main() {
   await seedShipping();
   await seedSupportInfo();
   await seedReviewsAndGuides();
+  await seedBanners();
 }
 
 main()

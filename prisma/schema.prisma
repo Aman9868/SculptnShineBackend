@@ -107,6 +107,7 @@ model ProductCategory {
   updatedAt     DateTime             @updatedAt
   subcategories ProductSubcategory[]
   products      Product[]
+  banners       Banner[]
 }
 
 model ProductSubcategory {
@@ -171,6 +172,7 @@ model ProductBrand {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   products    Product[]
+  banners     Banner[]
 }
 
 model Product {
@@ -206,6 +208,7 @@ model Product {
   reviews         ProductReview[]
   averageRating   Float             @default(0)
   reviewCount     Int               @default(0)
+  banners         Banner[]
 }
 
 model ProductVariant {
@@ -329,9 +332,21 @@ model InventoryLog {
 }
 
 enum BannerType {
-  HERO
+  HOME_GENERAL
+  HOME_PRODUCT
+  CATEGORY_HEADER
+  BRAND_HEADER
+  LOGIN_BG
+  SIGNUP_BG
   PROMO
+}
+
+enum BannerTargetType {
+  PRODUCT
   CATEGORY
+  BRAND
+  EXTERNAL_LINK
+  NONE
 }
 
 enum BannerStatus {
@@ -348,14 +363,22 @@ model Banner {
   video      String?
   link       String?
   ctaText    String?
-  type       BannerType   @default(HERO)
-  status     BannerStatus @default(ACTIVE)
-  sortOrder  Int          @default(0)
+  type       BannerType       @default(HOME_GENERAL)
+  targetType BannerTargetType @default(NONE)
+  status     BannerStatus     @default(ACTIVE)
+  sortOrder  Int              @default(0)
   startDate  DateTime?
   endDate    DateTime?
+  
+  productId  String?
+  product    Product?         @relation(fields: [productId], references: [id])
   categoryId String?
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  category   ProductCategory? @relation(fields: [categoryId], references: [id])
+  brandId    String?
+  brand      ProductBrand?    @relation(fields: [brandId], references: [id])
+
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 }
 
 model WishlistItem {
@@ -378,6 +401,9 @@ model BusinessConfig {
   supportPhone           String?
   freeShippingThreshold  Int      @default(999)
   standardShippingCharge Int      @default(50)
+  instagramUrl           String?
+  facebookUrl            String?
+  youtubeUrl             String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

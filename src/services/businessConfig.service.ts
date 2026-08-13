@@ -17,6 +17,9 @@ export class BusinessConfigService {
     supportPhone?: string;
     freeShippingThreshold?: number;
     standardShippingCharge?: number;
+    instagramUrl?: string;
+    facebookUrl?: string;
+    youtubeUrl?: string;
   }) {
     const existing = await prisma.businessConfig.findFirst();
     if (existing) {

@@ -36,6 +36,11 @@ export class BannerService {
         skip,
         take: limit,
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+        include: {
+          product: { select: { slug: true, title: true } },
+          category: { select: { slug: true, name: true } },
+          brand: { select: { slug: true, name: true } }
+        }
       }),
       prisma.banner.count({ where }),
     ]);
@@ -52,7 +57,14 @@ export class BannerService {
   }
 
   static async getBannerById(id: string) {
-    const banner = await prisma.banner.findUnique({ where: { id } });
+    const banner = await prisma.banner.findUnique({ 
+      where: { id },
+      include: {
+        product: { select: { slug: true, title: true } },
+        category: { select: { slug: true, name: true } },
+        brand: { select: { slug: true, name: true } }
+      }
+    });
 
     if (!banner) {
       throw createError(404, 'Banner not found');
@@ -69,11 +81,14 @@ export class BannerService {
     link?: string;
     ctaText?: string;
     type?: any;
+    targetType?: any;
     status?: any;
     sortOrder?: number;
     startDate?: string;
     endDate?: string;
     categoryId?: string;
+    productId?: string;
+    brandId?: string;
   }) {
     if (!data.title || !data.title.trim()) {
       throw createError(400, 'Banner title is required');
@@ -87,7 +102,7 @@ export class BannerService {
     let sortOrder = data.sortOrder;
     if (sortOrder === undefined || sortOrder === null) {
       const maxOrder = await prisma.banner.aggregate({
-        where: { type: data.type || 'HERO' },
+        where: { type: data.type || 'HOME_GENERAL' },
         _max: { sortOrder: true },
       });
       sortOrder = (maxOrder._max.sortOrder || 0) + 1;
@@ -101,12 +116,15 @@ export class BannerService {
         video: data.video?.trim() || null,
         link: data.link?.trim() || null,
         ctaText: data.ctaText?.trim() || null,
-        type: data.type || 'HERO',
+        type: data.type || 'HOME_GENERAL',
+        targetType: data.targetType || 'NONE',
         status: data.status || 'ACTIVE',
         sortOrder,
         startDate: data.startDate ? new Date(data.startDate) : null,
         endDate: data.endDate ? new Date(data.endDate) : null,
         categoryId: data.categoryId || null,
+        productId: data.productId || null,
+        brandId: data.brandId || null,
       },
     });
   }
@@ -127,11 +145,14 @@ export class BannerService {
         link: data.link !== undefined ? (data.link?.trim() || null) : undefined,
         ctaText: data.ctaText !== undefined ? (data.ctaText?.trim() || null) : undefined,
         type: data.type || undefined,
+        targetType: data.targetType || undefined,
         status: data.status || undefined,
         sortOrder: data.sortOrder !== undefined ? Number(data.sortOrder) : undefined,
         startDate: data.startDate !== undefined ? (data.startDate ? new Date(data.startDate) : null) : undefined,
         endDate: data.endDate !== undefined ? (data.endDate ? new Date(data.endDate) : null) : undefined,
         categoryId: data.categoryId !== undefined ? (data.categoryId || null) : undefined,
+        productId: data.productId !== undefined ? (data.productId || null) : undefined,
+        brandId: data.brandId !== undefined ? (data.brandId || null) : undefined,
       },
     });
   }
@@ -147,17 +168,17 @@ export class BannerService {
   }
 
   static async getBannerKPIs() {
-    const [total, active, inactive, scheduled, heroCount, promoCount, categoryCount] = await Promise.all([
+    const [total, active, inactive, scheduled, homeGeneralCount, promoCount, categoryHeaderCount] = await Promise.all([
       prisma.banner.count(),
       prisma.banner.count({ where: { status: 'ACTIVE' } }),
       prisma.banner.count({ where: { status: 'INACTIVE' } }),
       prisma.banner.count({ where: { status: 'SCHEDULED' } }),
-      prisma.banner.count({ where: { type: 'HERO' } }),
+      prisma.banner.count({ where: { type: 'HOME_GENERAL' } }),
       prisma.banner.count({ where: { type: 'PROMO' } }),
-      prisma.banner.count({ where: { type: 'CATEGORY' } }),
+      prisma.banner.count({ where: { type: 'CATEGORY_HEADER' } }),
     ]);
 
-    return { total, active, inactive, scheduled, heroCount, promoCount, categoryCount };
+    return { total, active, inactive, scheduled, homeGeneralCount, promoCount, categoryHeaderCount };
   }
 
   static async getPublicBanners(type?: string) {
@@ -179,6 +200,11 @@ export class BannerService {
     return await prisma.banner.findMany({
       where,
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      include: {
+        product: { select: { slug: true, title: true } },
+        category: { select: { slug: true, name: true } },
+        brand: { select: { slug: true, name: true } }
+      }
     });
   }
 }
