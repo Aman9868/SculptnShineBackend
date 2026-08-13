@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice <%= order.orderNumber %></title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 40px;
+      color: #333;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid #D4AF37;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .brand h1 {
+      margin: 0;
+      color: #1a1a1a;
+      font-size: 28px;
+    }
+    .brand p {
+      margin: 5px 0 0;
+      color: #666;
+      font-size: 14px;
+      white-space: pre-line;
+    }
+    .invoice-details {
+      text-align: right;
+    }
+    .invoice-details h2 {
+      margin: 0;
+      color: #D4AF37;
+      font-size: 24px;
+    }
+    .invoice-details p {
+      margin: 5px 0 0;
+      font-size: 14px;
+      color: #666;
+    }
+    .addresses {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+    .address-block {
+      width: 45%;
+    }
+    .address-block h3 {
+      font-size: 16px;
+      color: #1a1a1a;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+    .address-block p {
+      margin: 3px 0;
+      font-size: 14px;
+      color: #555;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    th {
+      background-color: #f9f9f9;
+      color: #333;
+      padding: 12px;
+      text-align: left;
+      font-size: 14px;
+      border-bottom: 2px solid #ddd;
+    }
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+      color: #555;
+    }
+    .text-right {
+      text-align: right;
+    }
+    .totals {
+      width: 50%;
+      float: right;
+    }
+    .totals table td {
+      border: none;
+      padding: 8px 12px;
+    }
+    .totals .final-total td {
+      font-weight: bold;
+      font-size: 18px;
+      color: #1a1a1a;
+      border-top: 2px solid #D4AF37;
+    }
+    .footer {
+      clear: both;
+      margin-top: 60px;
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <h1><%= config.brandName %></h1>
+      <p><%= config.address %></p>
+      <% if (config.gstNumber) { %>
+      <p><strong>GSTIN:</strong> <%= config.gstNumber %></p>
+      <% } %>
+    </div>
+    <div class="invoice-details">
+      <h2>INVOICE</h2>
+      <p><strong>Invoice No:</strong> <%= order.orderNumber %></p>
+      <p><strong>Date:</strong> <%= new Date(order.createdAt).toLocaleDateString() %></p>
+    </div>
+  </div>
+
+  <div class="addresses">
+    <div class="address-block">
+      <h3>Billed To:</h3>
+      <p><strong><%= order.shippingName %></strong></p>
+      <p><%= order.shippingAddress %></p>
+      <p><%= order.shippingCity %>, <%= order.shippingState %> - <%= order.shippingPincode %></p>
+      <p>Phone: <%= order.shippingPhone %></p>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th class="text-right">Price</th>
+        <th class="text-right">Qty</th>
+        <th class="text-right">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% order.items.forEach(function(item) { %>
+      <tr>
+        <td>
+          <strong><%= item.product.title %></strong>
+          <% if (item.variant) { %>
+            <br>
+            <span style="font-size: 12px; color: #888;">
+              <%= item.variant.flavor %> | <%= item.variant.weight %>
+            </span>
+          <% } %>
+        </td>
+        <td class="text-right">₹<%= item.price.toLocaleString('en-IN') %></td>
+        <td class="text-right"><%= item.quantity %></td>
+        <td class="text-right">₹<%= (item.price * item.quantity).toLocaleString('en-IN') %></td>
+      </tr>
+      <% }); %>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <table>
+      <tr>
+        <td>Subtotal</td>
+        <td class="text-right">₹<%= order.totalAmount.toLocaleString('en-IN') %></td>
+      </tr>
+      <tr class="final-total">
+        <td>Total Amount</td>
+        <td class="text-right">₹<%= order.totalAmount.toLocaleString('en-IN') %></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="footer">
+    <p>Thank you for your business!</p>
+    <% if (config.supportEmail) { %>
+      <p>For any queries, contact us at <%= config.supportEmail %></p>
+    <% } %>
+  </div>
+</body>
+</html>

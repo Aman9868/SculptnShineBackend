@@ -1,0 +1,21 @@
+# SculptnShine Backend Help & Instructions
+
+## Setup Instructions
+1. Install Node.js dependencies using `npm install`.
+2. Configure your PostgreSQL connection and Admin credentials in the `.env` file.
+3. Apply the database schema by running `npx prisma db push`.
+4. (Optional) Run the database seeder to create the initial admin user: `npx prisma db seed`.
+
+## Running the Application
+- Development Mode: Run `npm run dev` to start the server with Nodemon on `http://localhost:5000`.
+
+## Key Endpoints
+- `POST /api/auth/login`: Admin and User login.
+- `GET /api/users/me`: Fetch the current authenticated user's profile.
+- `PATCH /api/users/me`: Update the current user's profile.
+- `PATCH /api/users/me/password`: Change the password for the authenticated user.
+- `GET /api/users`: List all users (Requires ADMIN role).
+
+## Troubleshooting
+- If you face database connection issues, ensure your PostgreSQL server is running and the `DATABASE_URL` in `.env` is correct.
+- If Prisma types are missing, run `npx prisma generate`.

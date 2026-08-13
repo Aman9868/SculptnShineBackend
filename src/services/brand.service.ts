@@ -1,0 +1,207 @@
+import { prisma } from '../config/prisma';
+
+const createError = (statusCode: number, message: string) => {
+  const error: any = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
+
+const generateSlug = (name: string) => {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+};
+
+export class BrandService {
+  static async getAllBrands(query: { search?: string; status?: string; page?: number; limit?: number }) {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (query.status) {
+      where.status = query.status;
+    }
+
+    if (query.search) {
+      where.OR = [
+        { name: { contains: query.search, mode: 'insensitive' } },
+        { slug: { contains: query.search, mode: 'insensitive' } },
+        { description: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [brands, total] = await Promise.all([
+      prisma.productBrand.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: 'asc' },
+        include: {
+          _count: {
+            select: { products: true }
+          }
+        }
+      }),
+      prisma.productBrand.count({ where }),
+    ]);
+
+    return {
+      brands,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  static async getBrandById(id: string) {
+    const brand = await prisma.productBrand.findUnique({
+      where: { id },
+      include: {
+        products: {
+          take: 10,
+          select: { id: true, title: true, unitPrice: true, discountPercentage: true, gst: true, status: true, images: true }
+        },
+        _count: { select: { products: true } }
+      }
+    });
+
+    if (!brand) {
+      throw createError(404, 'Product Brand not found');
+    }
+
+    return brand;
+  }
+
+  static async findOrCreateBrandByName(name: string) {
+    if (!name || !name.trim()) return null;
+    const trimmedName = name.trim();
+    const slug = generateSlug(trimmedName);
+
+    let brand = await prisma.productBrand.findFirst({
+      where: {
+        OR: [
+          { name: { equals: trimmedName, mode: 'insensitive' } },
+          { slug: { equals: slug, mode: 'insensitive' } }
+        ]
+      }
+    });
+
+    if (!brand) {
+      brand = await prisma.productBrand.create({
+        data: {
+          name: trimmedName,
+          slug,
+          status: 'ACTIVE',
+        }
+      });
+    }
+
+    return brand;
+  }
+
+  static async createBrand(data: {
+    name: string;
+    slug?: string;
+    logo?: string;
+    description?: string;
+    website?: string;
+    status?: any;
+  }) {
+    if (!data.name || !data.name.trim()) {
+      throw createError(400, 'Brand name is required');
+    }
+
+    const slug = data.slug ? generateSlug(data.slug) : generateSlug(data.name);
+
+    const existingName = await prisma.productBrand.findUnique({ where: { name: data.name.trim() } });
+    if (existingName) {
+      throw createError(400, `Brand with name '${data.name}' already exists`);
+    }
+
+    const existingSlug = await prisma.productBrand.findUnique({ where: { slug } });
+    if (existingSlug) {
+      throw createError(400, `Brand with slug '${slug}' already exists`);
+    }
+
+    return await prisma.productBrand.create({
+      data: {
+        name: data.name.trim(),
+        slug,
+        logo: data.logo || null,
+        description: data.description || null,
+        website: data.website || null,
+        status: data.status || 'ACTIVE',
+      }
+    });
+  }
+
+  static async updateBrand(id: string, data: any) {
+    const existing = await prisma.productBrand.findUnique({ where: { id } });
+    if (!existing) {
+      throw createError(404, 'Product Brand not found');
+    }
+
+    if (data.name && data.name.trim() !== existing.name) {
+      const duplicateName = await prisma.productBrand.findUnique({ where: { name: data.name.trim() } });
+      if (duplicateName) {
+        throw createError(400, `Brand with name '${data.name}' already exists`);
+      }
+    }
+
+    let slug = existing.slug;
+    if (data.slug && generateSlug(data.slug) !== existing.slug) {
+      slug = generateSlug(data.slug);
+      const duplicateSlug = await prisma.productBrand.findUnique({ where: { slug } });
+      if (duplicateSlug) {
+        throw createError(400, `Brand with slug '${slug}' already exists`);
+      }
+    }
+
+    return await prisma.productBrand.update({
+      where: { id },
+      data: {
+        name: data.name ? data.name.trim() : undefined,
+        slug: data.slug ? slug : undefined,
+        logo: data.logo !== undefined ? data.logo : undefined,
+        description: data.description !== undefined ? data.description : undefined,
+        website: data.website !== undefined ? data.website : undefined,
+        status: data.status || undefined,
+      }
+    });
+  }
+
+  static async deleteBrand(id: string) {
+    const existing = await prisma.productBrand.findUnique({
+      where: { id },
+      include: { _count: { select: { products: true } } }
+    });
+
+    if (!existing) {
+      throw createError(404, 'Product Brand not found');
+    }
+
+    if (existing._count.products > 0) {
+      throw createError(400, `Cannot delete brand '${existing.name}' as it has ${existing._count.products} associated products.`);
+    }
+
+    await prisma.productBrand.delete({ where: { id } });
+    return { success: true, message: `Brand '${existing.name}' deleted successfully` };
+  }
+
+  static async getBrandKPIs() {
+    const [totalBrands, activeBrands, inactiveBrands] = await Promise.all([
+      prisma.productBrand.count(),
+      prisma.productBrand.count({ where: { status: 'ACTIVE' } }),
+      prisma.productBrand.count({ where: { status: 'INACTIVE' } }),
+    ]);
+
+    return {
+      totalBrands,
+      activeBrands,
+      inactiveBrands,
+    };
+  }
+}

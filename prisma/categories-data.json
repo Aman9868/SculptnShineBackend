@@ -1,0 +1,156 @@
+[
+  {
+    "id": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "name": "Proteins & Fitness Supplements",
+    "slug": "proteins-fitness-supplements",
+    "description": "Premium whey isolates, plant proteins, BCAAs, and workout performance supplements.",
+    "image": "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80",
+    "status": "ACTIVE",
+    "subcategories": [
+      {
+        "id": "3a8f9c0e-1b2c-4d3e-9f8a-7b6c5d4e3f2a",
+        "name": "Whey Isolate & Concentrates",
+        "slug": "whey-isolate-concentrates",
+        "description": "Ultra-pure fast-absorbing whey protein for lean muscle growth.",
+        "image": "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "b7c6d5e4-f3a2-4b1c-8d9e-0f1a2b3c4d5e",
+        "name": "Plant & Organic Protein",
+        "slug": "plant-organic-protein",
+        "description": "100% vegan pea and rice protein blends enriched with digestive enzymes.",
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "5f4e3d2c-1b0a-4f9e-8d7c-6b5a4f3e2d1c",
+        "name": "BCAAs & Pre-Workouts",
+        "slug": "bcaa-pre-workouts",
+        "description": "Essential amino acids and explosive energy boosters for intense training.",
+        "image": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "1a2b3c4d-5e6f-4a5b-8c7d-9e0f1a2b3c4d",
+        "name": "Creatine & Mass Gainers",
+        "slug": "creatine-mass-gainers",
+        "description": "Micronized creatine monohydrate and high-calorie muscle gainers.",
+        "image": "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "id": "9a8b7c6d-5e4f-4a3b-9c8d-7e6f5a4b3c2d",
+    "name": "Skincare & Facial Care",
+    "slug": "skincare-facial-care",
+    "description": "Dermatologist-tested face serums, hydration creams, sunscreens, and glowing cleansers.",
+    "image": "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80",
+    "status": "ACTIVE",
+    "subcategories": [
+      {
+        "id": "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e",
+        "name": "Face Serums & Glow Elixirs",
+        "slug": "face-serums-glow-elixirs",
+        "description": "Concentrated Niacinamide, Vitamin C, and Hyaluronic Acid serums.",
+        "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "7c8d9e0f-1a2b-4c3d-8e9f-0a1b2c3d4e5f",
+        "name": "Moisturizers & Night Creams",
+        "slug": "moisturizers-night-creams",
+        "description": "Intense barrier repair creams and oil-free gel hydration.",
+        "image": "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "4d5e6f7a-8b9c-4d0e-1f2a-3b4c5d6e7f8a",
+        "name": "Sunscreen & UV Protection",
+        "slug": "sunscreen-uv-protection",
+        "description": "Lightweight SPF 50 PA++++ broad-spectrum gel sunscreens.",
+        "image": "https://images.unsplash.com/photo-1526947425960-945c6e72858f?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "id": "6e7f8a9b-0c1d-4e2f-8a9b-0c1d2e3f4a5b",
+    "name": "Salon & Haircare Excellence",
+    "slug": "salon-haircare-excellence",
+    "description": "Professional salon hair serums, keratin shampoos, and scalp nourishment oils.",
+    "image": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
+    "status": "ACTIVE",
+    "subcategories": [
+      {
+        "id": "1f2a3b4c-5d6e-4f7a-8b9c-0d1e2f3a4b5c",
+        "name": "Keratin & Anti-Frizz Shampoos",
+        "slug": "keratin-anti-frizz-shampoos",
+        "description": "Sulfate-free smoothing shampoos for salon-like silky shine.",
+        "image": "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e",
+        "name": "Nourishing Scalp Oils & Serums",
+        "slug": "nourishing-scalp-oils-serums",
+        "description": "Rosemary and Argan hair oils for dense growth and root strengthening.",
+        "image": "https://images.unsplash.com/photo-1608248597261-e4d044696386?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "id": "3d4e5f6a-7b8c-4d9e-0f1a-2b3c4d5e6f7a",
+    "name": "Beauty & Luxury Cosmetics",
+    "slug": "beauty-luxury-cosmetics",
+    "description": "Velvet matte lipsticks, luminous foundations, and long-wear eye cosmetics.",
+    "image": "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=80",
+    "status": "ACTIVE",
+    "subcategories": [
+      {
+        "id": "0a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d",
+        "name": "Matte Lipsticks & Gloss",
+        "slug": "matte-lipsticks-gloss",
+        "description": "Hydrating transfer-proof liquid lipsticks and plumping glosses.",
+        "image": "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b",
+        "name": "Foundations & Concealers",
+        "slug": "foundations-concealers",
+        "description": "Weightless full-coverage liquid foundations with SPF.",
+        "image": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "id": "2a3b4c5d-6e7f-8a9b-0c1d-2e3f4a5b6c7d",
+    "name": "Wellness & Daily Health",
+    "slug": "wellness-daily-health",
+    "description": "Omega-3 fish oils, daily multivitamin gummies, and plant collagen boosters.",
+    "image": "https://images.unsplash.com/photo-1550572017-edd951aa8f72?auto=format&fit=crop&w=800&q=80",
+    "status": "ACTIVE",
+    "subcategories": [
+      {
+        "id": "7f8a9b0c-1d2e-3f4a-5b6c-7d8e9f0a1b2c",
+        "name": "Multivitamins & Minerals",
+        "slug": "multivitamins-minerals",
+        "description": "Complete 24-essential vitamin tablets for stamina and vitality.",
+        "image": "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "4b5c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e",
+        "name": "Omega-3 & Joint Support",
+        "slug": "omega-3-joint-support",
+        "description": "Triple strength EPA/DHA deep sea fish oil softgels.",
+        "image": "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?auto=format&fit=crop&w=800&q=80",
+        "status": "ACTIVE"
+      }
+    ]
+  }
+]

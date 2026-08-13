@@ -1,0 +1,22 @@
+[
+  {
+    "type": "PRIVACY_POLICY",
+    "title": "Privacy Policy",
+    "content": "<h2>Privacy Policy</h2><p>Welcome to SculptnShine. Your privacy is critically important to us. This Privacy Policy details the types of personal information we collect, how we use it, and your choices regarding your data.</p><h3>Information We Collect</h3><p>We collect information such as your name, email, shipping address, and payment details when you place an order. We also collect non-personal data through cookies to enhance your shopping experience.</p><h3>How We Use It</h3><p>We use your information to fulfill orders, process payments, and provide customer support. With your consent, we may send you marketing communications.</p>"
+  },
+  {
+    "type": "TERMS_AND_CONDITIONS",
+    "title": "Terms of Service",
+    "content": "<h2>Terms of Service</h2><p>By accessing or using the SculptnShine website, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the service.</p><h3>User Accounts</h3><p>You are responsible for safeguarding the password that you use to access the service and for any activities or actions under your password.</p><h3>Intellectual Property</h3><p>The service and its original content, features, and functionality are and will remain the exclusive property of SculptnShine and its licensors.</p>"
+  },
+  {
+    "type": "SHIPPING_POLICY",
+    "title": "Shipping Policy",
+    "content": "<h2>Shipping Policy</h2><p>We process all orders within 1-2 business days. Shipping times vary depending on your location. Please note that we do not ship on weekends or public holidays.</p><h3>Shipping Rates</h3><p>We offer free standard shipping on all orders over ₹999. For orders under ₹999, a standard shipping fee of ₹50 will be applied at checkout.</p><h3>Order Tracking</h3><p>Once your order has shipped, you will receive a tracking number via email.</p>"
+  },
+  {
+    "type": "RETURN_POLICY",
+    "title": "Return Policy",
+    "content": "<h2>Return Policy</h2><p>We want you to be completely satisfied with your purchase. If you are not satisfied, you may return items within 7 days of delivery for a full refund or exchange.</p><h3>Conditions</h3><p>Items must be unopened, in their original packaging, and in the same condition that you received them. Perishable goods such as food supplements cannot be returned if unsealed.</p><h3>Process</h3><p>To initiate a return, please contact our support team with your order number. Return shipping costs are the responsibility of the customer unless the item is defective.</p>"
+  }
+]

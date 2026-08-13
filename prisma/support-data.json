@@ -1,0 +1,18 @@
+[
+  {
+    "type": "GENERAL",
+    "email": "support@sculptnshine.com",
+    "mobileNumber": "+1 800 123 4567",
+    "whatsappNumber": "+1 800 123 4567",
+    "address": "123 Fitness Ave, Gym City, NY 10001",
+    "operatingHours": "Mon-Fri: 9AM - 6PM"
+  },
+  {
+    "type": "SALES",
+    "email": "sales@sculptnshine.com",
+    "mobileNumber": "+1 800 765 4321",
+    "whatsappNumber": "",
+    "address": "123 Fitness Ave, Gym City, NY 10001",
+    "operatingHours": "Mon-Fri: 9AM - 5PM"
+  }
+]

@@ -1,0 +1,101 @@
+[
+  {
+    "id": "b1a2c3d4-e5f6-4a1b-2c3d-4e5f6a1b2c3d",
+    "name": "Optimum Nutrition",
+    "slug": "optimum-nutrition",
+    "logo": "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=400&q=80",
+    "description": "World standard Gold Standard 100% Whey & sports nutrition performance.",
+    "website": "https://www.optimumnutrition.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "c2b3c4d5-e6f7-4b2c-3d4e-5f6a7b8c9d0e",
+    "name": "MuscleBlaze",
+    "slug": "muscleblaze",
+    "logo": "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=400&q=80",
+    "description": "Labdoor certified Biozyme whey isolates & body building sports supplements.",
+    "website": "https://www.muscleblaze.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "d3c4d5e6-f7a8-4c3d-4e5f-6a7b8c9d0e1f",
+    "name": "Dymatize",
+    "slug": "dymatize",
+    "logo": "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=400&q=80",
+    "description": "ISO100 hydrolyzed 100% whey isolate for maximum athletic performance.",
+    "website": "https://www.dymatize.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "e4d5e6f7-a8b9-4d4e-5f6a-7b8c9d0e1f2a",
+    "name": "CeraVe",
+    "slug": "cerave",
+    "logo": "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=400&q=80",
+    "description": "Dermatologist-developed skincare with essential ceramides and hyaluronic acid.",
+    "website": "https://www.cerave.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "f5e6f7a8-b9c0-4e5f-6a7b-8c9d0e1f2a3b",
+    "name": "The Ordinary",
+    "slug": "the-ordinary",
+    "logo": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80",
+    "description": "Clinical formulations with integrity — Niacinamide, AHA/BHA, and Retinol serums.",
+    "website": "https://theordinary.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "a6f7a8b9-c0d1-4f6a-7b8c-9d0e1f2a3b4c",
+    "name": "La Roche-Posay",
+    "slug": "la-roche-posay",
+    "logo": "https://images.unsplash.com/photo-1526947425960-945c6e72858f?auto=format&fit=crop&w=400&q=80",
+    "description": "Dermatological thermal spring water skincare & Anthelios oil-control sunscreen.",
+    "website": "https://www.laroche-posay.us",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "b7a8b9c0-d1e2-4a7b-8c9d-0e1f2a3b4c5d",
+    "name": "L'Oréal Professionnel",
+    "slug": "loreal-professionnel",
+    "logo": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80",
+    "description": "Professional salon hair products, Absolut Repair, and Mythic Oil serums.",
+    "website": "https://www.lorealprofessionnel.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "c8b9c0d1-e2f3-4b8c-9d0e-1f2a3b4c5d6e",
+    "name": "Olaplex",
+    "slug": "olaplex",
+    "logo": "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&w=400&q=80",
+    "description": "Patented bond-building haircare for damaged hair repair.",
+    "website": "https://olaplex.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "d9c0d1e2-f3a4-4c9d-0e1f-2a3b4c5d6e7f",
+    "name": "MAC Cosmetics",
+    "slug": "mac-cosmetics",
+    "logo": "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=400&q=80",
+    "description": "Artistry makeup brand — Studio Fix Liquid Foundation & Retro Matte Lipsticks.",
+    "website": "https://www.maccosmetics.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "e0d1e2f3-a4b5-4d0e-1f2a-3b4c5d6e7f8a",
+    "name": "Maybelline New York",
+    "slug": "maybelline-new-york",
+    "logo": "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=400&q=80",
+    "description": "SuperStay matte lipsticks, Fit Me foundations, and Lash Sensational mascaras.",
+    "website": "https://www.maybelline.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "f1e2f3a4-b5c6-4e1f-2a3b-4c5d6e7f8a9b",
+    "name": "Wellbeing Nutrition",
+    "slug": "wellbeing-nutrition",
+    "logo": "https://images.unsplash.com/photo-1550572017-edd951aa8f72?auto=format&fit=crop&w=400&q=80",
+    "description": "Organic plant-based vitamins, daily collagen melts, and apple cider vinegar.",
+    "website": "https://wellbeingnutrition.com",
+    "status": "ACTIVE"
+  }
+]

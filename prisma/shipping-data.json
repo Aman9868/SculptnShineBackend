@@ -1,0 +1,35 @@
+{
+  "threshold": 2000,
+  "rules": [
+    {
+      "name": "Delhi/HR/PB/HP",
+      "states": ["Delhi", "Haryana", "Punjab", "Himachal Pradesh"],
+      "charge": 75,
+      "isDefault": false
+    },
+    {
+      "name": "UP/UK/RJ",
+      "states": ["Uttar Pradesh", "Uttarakhand", "Rajasthan"],
+      "charge": 85,
+      "isDefault": false
+    },
+    {
+      "name": "Metro Cities",
+      "states": ["Maharashtra", "Karnataka", "Tamil Nadu", "West Bengal", "Telangana", "Gujarat"],
+      "charge": 115,
+      "isDefault": false
+    },
+    {
+      "name": "North East",
+      "states": ["Arunachal Pradesh", "Assam", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Sikkim", "Tripura"],
+      "charge": 150,
+      "isDefault": false
+    },
+    {
+      "name": "Rest of India",
+      "states": [],
+      "charge": 130,
+      "isDefault": true
+    }
+  ]
+}
