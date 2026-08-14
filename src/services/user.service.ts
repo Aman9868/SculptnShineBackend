@@ -125,11 +125,40 @@ export class UserService {
         updatedAt: true,
         profile: {
           include: {
-            addresses: true,
-            orders: true,
-            cart: true,
-          }
-        }
+            addresses: {
+              orderBy: { createdAt: 'desc' },
+            },
+            orders: {
+              include: {
+                items: {
+                  include: {
+                    product: {
+                      select: {
+                        id: true,
+                        title: true,
+                        images: true,
+                        sku: true,
+                      },
+                    },
+                    variant: true,
+                  },
+                },
+                payments: true,
+              },
+              orderBy: { createdAt: 'desc' },
+            },
+            cart: {
+              include: {
+                items: {
+                  include: {
+                    product: true,
+                    variant: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
