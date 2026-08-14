@@ -25,6 +25,8 @@ import reviewRoutes from './routes/review.routes';
 import supportInfoRoutes from './routes/support-info.routes';
 import guideRoutes from './routes/guide.routes';
 import notificationRoutes from './routes/notification.routes';
+import healthRoutes from './routes/health.routes';
+import { HealthController } from './controllers/health.controller';
 import { requestContextMiddleware } from './config/request-context';
 import './workers/notification.worker'; // Initialize BullMQ worker
 
@@ -66,11 +68,10 @@ app.use('/api/support/info', supportInfoRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/guides', guideRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/health', healthRoutes);
 
 // Health check endpoint
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok', message: 'SculptnShine Backend is running' });
-});
+app.get('/health', HealthController.checkHealth);
 
 // Error handling middleware
 app.use(errorMiddleware);
