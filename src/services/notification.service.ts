@@ -7,12 +7,20 @@ dotenv.config();
 
 const prisma = new PrismaClient();
 
-// Configure web-push with VAPID keys
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || 'mailto:support@sculptnshine.com',
-  process.env.VAPID_PUBLIC_KEY || '',
-  process.env.VAPID_PRIVATE_KEY || ''
-);
+// Configure web-push with VAPID keys if provided
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  try {
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT || 'mailto:support@sculptnshine.com',
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    );
+  } catch (error) {
+    console.warn('⚠️ Failed to initialize web-push VAPID details:', error);
+  }
+} else {
+  console.warn('⚠️ VAPID keys not configured. Web push notifications will be disabled.');
+}
 
 export class NotificationService {
   /**

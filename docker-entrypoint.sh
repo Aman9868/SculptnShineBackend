@@ -11,7 +11,7 @@ if [ -n "$DATABASE_URL" ]; then
   # Optional auto-seed
   if [ "$ENABLE_SEED" = "true" ]; then
     echo "🌱 Seeding initial database data..."
-    npx ts-node prisma/seed.ts || echo "⚠️ Seeding skipped or already applied."
+    npx ts-node --transpile-only --compiler-options '{"module":"commonjs"}' prisma/seed.ts || node -r ts-node/register prisma/seed.ts || echo "⚠️ Seeding skipped or already applied."
   fi
 fi
 
