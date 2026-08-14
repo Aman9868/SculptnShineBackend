@@ -371,7 +371,10 @@ export class ProductService {
   }
 
   static async updateProduct(id: string, data: any) {
-    const existing = await prisma.product.findUnique({ where: { id } });
+    const existing = await prisma.product.findUnique({ 
+      where: { id },
+      include: { brand: true, variants: true } 
+    });
     if (!existing) {
       throw createError(404, 'Product not found');
     }
@@ -383,14 +386,65 @@ export class ProductService {
       }
     }
 
-    const stockDifference = data.stock !== undefined ? data.stock - existing.stock : 0;
+    // Separate relational nested objects from scalar update fields
+    const { 
+      brand, 
+      category, 
+      subcategory, 
+      variants, 
+      reviews, 
+      inventoryLogs, 
+      orderItems, 
+      cartItems, 
+      wishlistItems,
+      reason, 
+      createdAt, 
+      updatedAt, 
+      id: _ignoredId,
+      ...cleanData 
+    } = data;
+
+    // Resolve Brand Relation
+    let brandId = cleanData.brandId;
+    if (brand && typeof brand === 'object' && brand.id) {
+      brandId = brand.id;
+    } else if (typeof brand === 'string' && brand.trim()) {
+      const brandObj = await BrandService.findOrCreateBrandByName(brand);
+      if (brandObj) {
+        brandId = brandObj.id;
+      }
+    }
+
+    if (brandId !== undefined) {
+      cleanData.brandId = brandId;
+    }
+
+    // Resolve Category / Subcategory IDs if sent as nested objects
+    if (category && typeof category === 'object' && category.id) {
+      cleanData.categoryId = category.id;
+    }
+    if (subcategory && typeof subcategory === 'object' && subcategory.id) {
+      cleanData.subcategoryId = subcategory.id;
+    }
+
+    if (cleanData.expiryDate) {
+      cleanData.expiryDate = new Date(cleanData.expiryDate);
+    }
+
+    const stockDifference = cleanData.stock !== undefined ? cleanData.stock - existing.stock : 0;
 
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: {
-        ...data,
-        status: data.stock !== undefined ? (data.stock === 0 ? 'OUT_OF_STOCK' : data.status || existing.status) : data.status,
+        ...cleanData,
+        status: cleanData.stock !== undefined ? (cleanData.stock === 0 ? 'OUT_OF_STOCK' : cleanData.status || existing.status) : cleanData.status,
       },
+      include: {
+        brand: true,
+        category: true,
+        subcategory: true,
+        variants: true,
+      }
     });
 
     if (stockDifference !== 0) {
