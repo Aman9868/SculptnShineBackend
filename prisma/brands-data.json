@@ -97,5 +97,50 @@
     "description": "Organic plant-based vitamins, daily collagen melts, and apple cider vinegar.",
     "website": "https://wellbeingnutrition.com",
     "status": "ACTIVE"
+  },
+  {
+    "id": "7a8b9c0d-1e2f-4a3b-8c9d-0e1f2a3b4c5d",
+    "name": "One Science Nutrition",
+    "slug": "one-science",
+    "logo": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80",
+    "description": "European scientifically formulated 100% Premium Whey and ISO Gold protein.",
+    "website": "https://onesciencenutrition.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "8b9c0d1e-2f3a-4b4c-9d0e-1f2a3b4c5d6e",
+    "name": "BSN Nutrition",
+    "slug": "bsn-nutrition",
+    "logo": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=400&q=80",
+    "description": "Syntha-6 ultra-premium protein matrix and cutting-edge sports nutrition.",
+    "website": "https://www.gobsn.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "9c0d1e2f-3a4b-4c5d-0e1f-2a3b4c5d6e7f",
+    "name": "Scitec Nutrition",
+    "slug": "scitec-nutrition",
+    "logo": "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=400&q=80",
+    "description": "100% Whey Protein Professional with added amino acids and digestive enzymes.",
+    "website": "https://scitecnutrition.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "0d1e2f3a-4b5c-4d6e-1f2a-3b4c5d6e7f8a",
+    "name": "Pro JYM",
+    "slug": "pro-jym",
+    "logo": "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=400&q=80",
+    "description": "Dr. Jim Stoppani's science-backed ultra-premium protein blend.",
+    "website": "https://jymsupplementscience.com",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "1e2f3a4b-5c6d-4e7f-2a3b-4c5d6e7f8a9b",
+    "name": "Labrada Nutrition",
+    "slug": "labrada",
+    "logo": "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=400&q=80",
+    "description": "Lee Labrada's award-winning Muscle Mass Gainer and sports supplements.",
+    "website": "https://www.labrada.com",
+    "status": "ACTIVE"
   }
 ]

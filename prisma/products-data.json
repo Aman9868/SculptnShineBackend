@@ -1,5 +1,442 @@
 [
   {
+    "id": "nb-prod-001-dym-iso100-str",
+    "title": "Dymatize ISO100 Hydrolyzed 100% Whey Isolate (Strawberry)",
+    "slug": "dymatize-iso100-hydrolyzed-strawberry-76-servings",
+    "description": "Dymatize ISO100 Hydrolyzed 100% Whey Protein Isolate with 25g protein, 5.5g BCAAs per serving. 76 Servings Strawberry flavor.",
+    "price": 17999,
+    "discountPrice": 14039,
+    "sku": "DYM-ISO100-STR-5LB",
+    "stock": 2,
+    "lowStockAlert": 1,
+    "images": [
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+    ],
+    "status": "ACTIVE",
+    "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "subcategoryId": "3a8f9c0e-1b2c-4d3e-9f8a-7b6c5d4e3f2a",
+    "brandId": "d3c4d5e6-f7a8-4c3d-4e5f-6a7b8c9d0e1f",
+    "preference": "VEGETARIAN",
+    "variants": [
+      {
+        "id": "nb-var-001-dym-iso100-str",
+        "title": "Dymatize ISO100 - Strawberry (2.3kg / 5lb)",
+        "sku": "DYM-ISO100-STR-5LB-V1",
+        "flavor": "Strawberry",
+        "weight": "2.3 Kg / 5 LB",
+        "price": 17999,
+        "discountPrice": 14039,
+        "stock": 2,
+        "images": [
+          "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nb-prod-002-dym-iso100-gch",
+    "title": "Dymatize ISO100 Hydrolyzed 100% Whey Isolate (Gourmet Chocolate)",
+    "slug": "dymatize-iso100-hydrolyzed-gourmet-chocolate-71-servings",
+    "description": "Ultra-fast absorbing hydrolyzed whey protein isolate for rapid muscle recovery. 71 Servings Gourmet Chocolate flavor.",
+    "price": 19999,
+    "discountPrice": 15599,
+    "sku": "DYM-ISO100-GCH-5LB",
+    "stock": 5,
+    "lowStockAlert": 2,
+    "images": [
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+    ],
+    "status": "ACTIVE",
+    "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "subcategoryId": "3a8f9c0e-1b2c-4d3e-9f8a-7b6c5d4e3f2a",
+    "brandId": "d3c4d5e6-f7a8-4c3d-4e5f-6a7b8c9d0e1f",
+    "preference": "VEGETARIAN",
+    "variants": [
+      {
+        "id": "nb-var-002-dym-iso100-gch",
+        "title": "Dymatize ISO100 - Gourmet Chocolate (2.3kg / 5lb)",
+        "sku": "DYM-ISO100-GCH-5LB-V1",
+        "flavor": "Gourmet Chocolate",
+        "weight": "2.3 Kg / 5 LB",
+        "price": 19999,
+        "discountPrice": 15599,
+        "stock": 5,
+        "images": [
+          "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nb-prod-003-dym-elite-rch",
+    "title": "Dymatize Elite 100% Whey Protein (Rich Chocolate)",
+    "slug": "dymatize-elite-100-whey-rich-chocolate-63-servings",
+    "description": "100% Whey Protein blend with fast-absorbing whey concentrate & isolate. 63 Servings Rich Chocolate flavor.",
+    "price": 12999,
+    "discountPrice": 9619,
+    "sku": "DYM-ELITE-RCH-5LB",
+    "stock": 3,
+    "lowStockAlert": 1,
+    "images": [
+      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80"
+    ],
+    "status": "ACTIVE",
+    "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "subcategoryId": "3a8f9c0e-1b2c-4d3e-9f8a-7b6c5d4e3f2a",
+    "brandId": "d3c4d5e6-f7a8-4c3d-4e5f-6a7b8c9d0e1f",
+    "preference": "VEGETARIAN",
+    "variants": [
+      {
+        "id": "nb-var-003-dym-elite-rch",
+        "title": "Dymatize Elite 100% Whey - Rich Chocolate (2.31kg / 5lb)",
+        "sku": "DYM-ELITE-RCH-5LB-V1",
+        "flavor": "Rich Chocolate",
+        "weight": "2.31 Kg / 5 LB",
+        "price": 12999,
+        "discountPrice": 9619,
+        "stock": 3,
+        "images": [
+          "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nb-prod-004-osn-isogold-cch",
+    "title": "One Science Nutrition ISO Gold 100% Whey Isolate (Chocolate Charge)",
+    "slug": "one-science-iso-gold-chocolate-charge-70-servings",
+    "description": "Pure Whey Protein Isolate with 27g protein per serving and zero added sugar. 70 Servings Chocolate Charge.",
+    "price": 11499,
+    "discountPrice": 7474,
+    "sku": "OSN-ISOGOLD-CCH-5LB",
+    "stock": 2,
+    "lowStockAlert": 1,
+    "images": [
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+    ],
+    "status": "ACTIVE",
+    "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "subcategoryId": "3a8f9c0e-1b2c-4d3e-9f8a-7b6c5d4e3f2a",
+    "brandId": "7a8b9c0d-1e2f-4a3b-8c9d-0e1f2a3b4c5d",
+    "preference": "VEGETARIAN",
+    "variants": [
+      {
+        "id": "nb-var-004-osn-isogold-cch",
+        "title": "One Science ISO Gold - Chocolate Charge (2.27kg / 5lb)",
+        "sku": "OSN-ISOGOLD-CCH-5LB-V1",
+        "flavor": "Chocolate Charge",
+        "weight": "2.27 Kg / 5 LB",
+        "price": 11499,
+        "discountPrice": 7474,
+        "stock": 2,
+        "images": [
+          "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nb-prod-005-osn-whey-2lb",
+    "title": "One Science Nutrition 100% Premium Whey Protein (2 Lbs / 28 Servings)",
+    "slug": "one-science-100-premium-whey-protein-2lb",
+    "description": "Grass-fed European standard 100% Premium Whey Protein with 25g protein and 6.6g BCAAs. Available in Kesar Kulfi & Dubai Kunafa flavors.",
+    "price": 4999,
+    "discountPrice": 3499,
+    "sku": "OSN-WHEY-2LB-COMBO",
+    "stock": 9,
+    "lowStockAlert": 2,
+    "images": [
+      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+    ],
+    "status": "ACTIVE",
+    "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "subcategoryId": "3a8f9c0e-1b2c-4d3e-9f8a-7b6c5d4e3f2a",
+    "brandId": "7a8b9c0d-1e2f-4a3b-8c9d-0e1f2a3b4c5d",
+    "preference": "VEGETARIAN",
+    "variants": [
+      {
+        "id": "nb-var-005-osn-whey-kk-2lb",
+        "title": "One Science 100% Whey - Kesar Kulfi (907g / 2lb)",
+        "sku": "OSN-WHEY-2LB-KK",
+        "flavor": "Kesar Kulfi",
+        "weight": "907 gram / 2 LB",
+        "price": 4999,
+        "discountPrice": 3499,
+        "stock": 4,
+        "images": [
+          "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80"
+        ]
+      },
+      {
+        "id": "nb-var-005-osn-whey-dkc-2lb",
+        "title": "One Science 100% Whey - Dubai Kunafa Chocolate (907g / 2lb)",
+        "sku": "OSN-WHEY-2LB-DKC",
+        "flavor": "Dubai Kunafa Chocolate",
+        "weight": "907 gram / 2 LB",
+        "price": 4999,
+        "discountPrice": 3499,
+        "stock": 5,
+        "images": [
+          "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nb-prod-006-osn-whey-5lb",
+    "title": "One Science Nutrition 100% Premium Whey Protein (5 Lbs / 74 Servings)",
+    "slug": "one-science-100-premium-whey-protein-5lb",
+    "description": "Premium Whey Protein enriched with whey peptides and digestive enzymes. Available in Dubai Kunafa Chocolate, Vanilla Very Berry, Chocolate Coconut, and Strawberry White Chocolate.",
+    "price": 9849,
+    "discountPrice": 9061,
+    "sku": "OSN-WHEY-5LB-FLAVORS",
+    "stock": 24,
+    "lowStockAlert": 4,
+    "images": [
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+    ],
+    "status": "ACTIVE",
+    "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "subcategoryId": "3a8f9c0e-1b2c-4d3e-9f8a-7b6c5d4e3f2a",
+    "brandId": "7a8b9c0d-1e2f-4a3b-8c9d-0e1f2a3b4c5d",
+    "preference": "VEGETARIAN",
+    "variants": [
+      {
+        "id": "nb-var-006-osn-dkc-5lb",
+        "title": "One Science 100% Whey - Dubai Kunafa Chocolate (2.27kg / 5lb)",
+        "sku": "OSN-WHEY-5LB-DKC",
+        "flavor": "Dubai Kunafa Chocolate",
+        "weight": "2.27 Kg / 5 LB",
+        "price": 9849,
+        "discountPrice": 9061,
+        "stock": 6,
+        "images": [
+          "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80"
+        ]
+      },
+      {
+        "id": "nb-var-006-osn-vvb-5lb",
+        "title": "One Science 100% Whey - Vanilla Very Berry (2.27kg / 5lb)",
+        "sku": "OSN-WHEY-5LB-VVB",
+        "flavor": "Vanilla Very Berry",
+        "weight": "2.27 Kg / 5 LB",
+        "price": 9849,
+        "discountPrice": 9061,
+        "stock": 6,
+        "images": [
+          "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+        ]
+      },
+      {
+        "id": "nb-var-006-osn-cc-5lb",
+        "title": "One Science 100% Whey - Chocolate Coconut (2.27kg / 5lb)",
+        "sku": "OSN-WHEY-5LB-CC",
+        "flavor": "Chocolate Coconut",
+        "weight": "2.27 Kg / 5 LB",
+        "price": 9849,
+        "discountPrice": 9061,
+        "stock": 6,
+        "images": [
+          "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80"
+        ]
+      },
+      {
+        "id": "nb-var-006-osn-swc-5lb",
+        "title": "One Science 100% Whey - Strawberry White Chocolate (2.27kg / 5lb)",
+        "sku": "OSN-WHEY-5LB-SWC",
+        "flavor": "Strawberry White Chocolate",
+        "weight": "2.27 Kg / 5 LB",
+        "price": 9849,
+        "discountPrice": 9061,
+        "stock": 6,
+        "images": [
+          "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nb-prod-007-on-gold-drch",
+    "title": "Optimum Nutrition (ON) Gold Standard 100% Whey (Double Rich Chocolate)",
+    "slug": "optimum-nutrition-gold-standard-100-whey-double-rich-chocolate-5lb",
+    "description": "The world's best-selling whey protein powder with 24g protein and 5.5g naturally occurring BCAAs. 74 Servings Double Rich Chocolate.",
+    "price": 8509,
+    "discountPrice": 6552,
+    "sku": "ON-GS-DRCH-5LB",
+    "stock": 7,
+    "lowStockAlert": 2,
+    "images": [
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+    ],
+    "status": "ACTIVE",
+    "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "subcategoryId": "3a8f9c0e-1b2c-4d3e-9f8a-7b6c5d4e3f2a",
+    "brandId": "b1a2c3d4-e5f6-4a1b-2c3d-4e5f6a1b2c3d",
+    "preference": "VEGETARIAN",
+    "variants": [
+      {
+        "id": "nb-var-007-on-gold-drch",
+        "title": "ON Gold Standard 100% Whey - Double Rich Chocolate (2.27kg / 5lb)",
+        "sku": "ON-GS-DRCH-5LB-V1",
+        "flavor": "Double Rich Chocolate",
+        "weight": "2.27 Kg / 5 LB",
+        "price": 8509,
+        "discountPrice": 6552,
+        "stock": 7,
+        "images": [
+          "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nb-prod-008-bsn-syntha6-cms",
+    "title": "BSN Syntha-6 Ultra-Premium Protein Matrix (Chocolate Milkshake)",
+    "slug": "bsn-syntha-6-protein-chocolate-milkshake-5lb",
+    "description": "Multifunctional ultra-premium protein matrix with 22g protein per serving and delicious milkshake taste. 48 Servings Chocolate Milkshake.",
+    "price": 11999,
+    "discountPrice": 7799,
+    "sku": "BSN-SYNTHA6-CMS-5LB",
+    "stock": 5,
+    "lowStockAlert": 2,
+    "images": [
+      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80"
+    ],
+    "status": "ACTIVE",
+    "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "subcategoryId": "3a8f9c0e-1b2c-4d3e-9f8a-7b6c5d4e3f2a",
+    "brandId": "8b9c0d1e-2f3a-4b4c-9d0e-1f2a3b4c5d6e",
+    "preference": "VEGETARIAN",
+    "variants": [
+      {
+        "id": "nb-var-008-bsn-syntha6-cms",
+        "title": "BSN Syntha-6 - Chocolate Milkshake (2.27kg / 5lb)",
+        "sku": "BSN-SYNTHA6-CMS-5LB-V1",
+        "flavor": "Chocolate Milkshake",
+        "weight": "2.27 Kg / 5 LB",
+        "price": 11999,
+        "discountPrice": 7799,
+        "stock": 5,
+        "images": [
+          "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nb-prod-009-scitec-100whey-choc",
+    "title": "Scitec Nutrition 100% Whey Protein Professional (Chocolate)",
+    "slug": "scitec-nutrition-100-whey-professional-chocolate-2-35kg",
+    "description": "100% Whey Protein Professional with amino acid matrix, Taurine, L-Glutamine, and Papain/Bromelain digestive enzymes. 78 Servings Chocolate.",
+    "price": 10999,
+    "discountPrice": 6819,
+    "sku": "SCITEC-100WHEY-CHOC-2350G",
+    "stock": 10,
+    "lowStockAlert": 2,
+    "images": [
+      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+    ],
+    "status": "ACTIVE",
+    "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "subcategoryId": "3a8f9c0e-1b2c-4d3e-9f8a-7b6c5d4e3f2a",
+    "brandId": "9c0d1e2f-3a4b-4c5d-0e1f-2a3b4c5d6e7f",
+    "preference": "VEGETARIAN",
+    "variants": [
+      {
+        "id": "nb-var-009-scitec-choc",
+        "title": "Scitec 100% Whey Professional - Chocolate (2.35kg)",
+        "sku": "SCITEC-100WHEY-CHOC-2350G-V1",
+        "flavor": "Chocolate",
+        "weight": "2.35 Kg",
+        "price": 10999,
+        "discountPrice": 6819,
+        "stock": 10,
+        "images": [
+          "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nb-prod-010-projym-blend-choc",
+    "title": "Pro JYM Ultra-Premium Protein Blend (Chocolate Mousse)",
+    "slug": "pro-jym-ultra-premium-protein-blend-chocolate-mousse-4-4lb",
+    "description": "Precision-engineered protein blend featuring Whey Protein Isolate, Micellar Casein, Milk Protein Isolate, and Egg White Protein. 50 Servings Chocolate Mousse.",
+    "price": 10999,
+    "discountPrice": 6819,
+    "sku": "PROJYM-PROTEIN-CHOCMOUSSE-2KG",
+    "stock": 10,
+    "lowStockAlert": 2,
+    "images": [
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+    ],
+    "status": "ACTIVE",
+    "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "subcategoryId": "3a8f9c0e-1b2c-4d3e-9f8a-7b6c5d4e3f2a",
+    "brandId": "0d1e2f3a-4b5c-4d6e-1f2a-3b4c5d6e7f8a",
+    "preference": "NON_VEGETARIAN",
+    "variants": [
+      {
+        "id": "nb-var-010-projym-chocmousse",
+        "title": "Pro JYM Blend - Chocolate Mousse (2kg / 4.4lb)",
+        "sku": "PROJYM-PROTEIN-CHOCMOUSSE-2KG-V1",
+        "flavor": "Chocolate Mousse",
+        "weight": "2 Kg / 4.4 LBS",
+        "price": 10999,
+        "discountPrice": 6819,
+        "stock": 10,
+        "images": [
+          "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nb-prod-011-labrada-massgainer-choc",
+    "title": "Labrada Nutrition Muscle Mass Gainer (Nutraceutical Chocolate)",
+    "slug": "labrada-muscle-mass-gainer-chocolate-3kg",
+    "description": "High-calorie muscle mass gainer packed with 52g protein, 250g carbs, and 1240 calories per serving for serious muscle growth. 3kg Chocolate.",
+    "price": 4199,
+    "discountPrice": 3527,
+    "sku": "LABRADA-MASSGAINER-CHOC-3KG",
+    "stock": 10,
+    "lowStockAlert": 2,
+    "images": [
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80"
+    ],
+    "status": "ACTIVE",
+    "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
+    "subcategoryId": "1a2b3c4d-5e6f-4a5b-8c7d-9e0f1a2b3c4d",
+    "brandId": "1e2f3a4b-5c6d-4e7f-2a3b-4c5d6e7f8a9b",
+    "preference": "VEGETARIAN",
+    "variants": [
+      {
+        "id": "nb-var-011-labrada-mass-choc",
+        "title": "Labrada Muscle Mass Gainer - Chocolate (3kg / 6.61lb)",
+        "sku": "LABRADA-MASSGAINER-CHOC-3KG-V1",
+        "flavor": "Nutraceutical Chocolate",
+        "weight": "3 Kg / 6.61 lbs",
+        "price": 4199,
+        "discountPrice": 3527,
+        "stock": 10,
+        "images": [
+          "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
+  },
+  {
     "id": "1844f9d5-65cb-4ce6-9dc5-3109afd713d8",
     "title": "Biozyme Performance Whey",
     "slug": "biozyme-performance-whey-1",

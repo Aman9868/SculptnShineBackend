@@ -24,6 +24,7 @@ export class ProductService {
     weights?: string;
     minPrice?: string | number;
     maxPrice?: string | number;
+    rating?: string | number;
     sort?: string;
   }) {
     const page = Number(query.page) || 1;
@@ -40,12 +41,21 @@ export class ProductService {
     if (query.brand) {
       where.brand = { name: { contains: query.brand, mode: 'insensitive' } };
     }
-    
+
     // Preferences can be a comma-separated list
     if (query.preference) {
       const prefs = query.preference.split(',');
       // Try to parse them as the Preference enum, ignore invalid ones
       where.preference = { in: prefs };
+    }
+
+    // Rating filtering (minimum stars)
+    if (query.rating) {
+      const minStar = Number(query.rating);
+      if (!isNaN(minStar) && minStar > 0) {
+        where.averageRating = { gte: minStar };
+        where.reviewCount = { gt: 0 };
+      }
     }
 
     // Variants filtering (Flavors, Weights)
@@ -63,7 +73,7 @@ export class ProductService {
     if (query.minPrice || query.maxPrice) {
       const min = query.minPrice ? Number(query.minPrice) : undefined;
       const max = query.maxPrice ? Number(query.maxPrice) : undefined;
-      
+
       const priceFilter: any = {};
       if (min !== undefined) priceFilter.gte = min;
       if (max !== undefined) priceFilter.lte = max;
@@ -97,8 +107,6 @@ export class ProductService {
       if (query.sort === 'price_asc') orderBy = { unitPrice: 'asc' };
       else if (query.sort === 'price_desc') orderBy = { unitPrice: 'desc' };
       else if (query.sort === 'newest') orderBy = { createdAt: 'desc' };
-      // Note: If discountPrice is significantly used, Prisma might not easily sort by it when null,
-      // but sorting by base price is the standard fallback for e-commerce.
     }
 
     const [products, total] = await Promise.all([
@@ -152,7 +160,7 @@ export class ProductService {
 
     const products = await prisma.product.findMany({
       where,
-      select: { preference: true, brand: { select: { name: true } } }
+      select: { preference: true, averageRating: true, reviewCount: true, brand: { select: { name: true } } }
     });
 
     const variants = await prisma.productVariant.findMany({
@@ -171,18 +179,30 @@ export class ProductService {
       return Object.entries(counts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
     };
 
+    const ratedProducts = products.filter(p => p.reviewCount > 0 && p.averageRating > 0);
+    const ratings = [4, 3, 2, 1].map(stars => ({
+      stars,
+      count: ratedProducts.filter(p => p.averageRating >= stars).length
+    })).filter(r => r.count > 0);
+
     return {
       brands: getCounts(products, 'brand.name'),
       preferences: getCounts(products, 'preference'),
       flavors: getCounts(variants, 'flavor'),
       weights: getCounts(variants, 'weight'),
+      ratings,
     };
   }
 
   static async getProductById(idOrSlug: string) {
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
-    const product = await prisma.product.findUnique({
-      where: isUUID ? { id: idOrSlug } : { slug: idOrSlug },
+    const product = await prisma.product.findFirst({
+      where: {
+        OR: [
+          { id: idOrSlug },
+          { slug: idOrSlug },
+          { sku: idOrSlug }
+        ]
+      },
       include: {
         category: true,
         subcategory: true,
@@ -196,7 +216,33 @@ export class ProductService {
       throw createError(404, 'Product not found');
     }
 
-    return product;
+    const basePrice = product.unitPrice;
+    const discountPct = product.discountPercentage || 0;
+    const calculatedDiscountPrice = discountPct > 0 
+      ? Math.round(basePrice * (1 - discountPct / 100)) 
+      : basePrice;
+
+    const enrichedVariants = (product.variants || []).map((v: any) => {
+      const vBasePrice = v.unitPrice ?? basePrice;
+      const vDiscountPct = v.discountPercentage ?? discountPct ?? 0;
+      const vDiscountPrice = vDiscountPct > 0 
+        ? Math.round(vBasePrice * (1 - vDiscountPct / 100)) 
+        : vBasePrice;
+      return {
+        ...v,
+        price: vBasePrice,
+        discountPrice: vDiscountPrice,
+        salePrice: vDiscountPrice,
+      };
+    });
+
+    return {
+      ...product,
+      price: basePrice,
+      discountPrice: calculatedDiscountPrice,
+      salePrice: calculatedDiscountPrice,
+      variants: enrichedVariants,
+    };
   }
 
   static async createProduct(data: {
@@ -226,6 +272,7 @@ export class ProductService {
       unitPrice: number;
       discountPercentage?: number;
       gst?: number;
+      expiryDate?: Date | string;
       stock?: number;
       images?: string[];
       isDefault?: boolean;
@@ -281,6 +328,7 @@ export class ProductService {
             unitPrice: v.unitPrice,
             discountPercentage: v.discountPercentage || 0,
             gst: v.gst ?? 18,
+            expiryDate: v.expiryDate ? new Date(v.expiryDate) : (data.expiryDate || null),
             stock: v.stock || 0,
             images: v.images || [],
             isDefault: v.isDefault || false,

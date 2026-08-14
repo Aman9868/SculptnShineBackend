@@ -1,11 +1,5 @@
 import { prisma } from '../config/prisma';
-import {
-  phonepeConfig,
-  createPhonePePayload,
-  generatePhonePeChecksum,
-  generatePhonePeStatusChecksum,
-  verifyPhonePeChecksum,
-} from '../config/phonepe.config';
+import { phonepeConfig, phonepeClient } from '../config/phonepe.config';
 import { OrderService } from './order.service';
 import { emitOrderStatusUpdate } from '../config/socket';
 import { InvoiceService } from './invoice.service';
@@ -48,69 +42,51 @@ export class PaymentService {
       },
     });
 
-    // Check if PAYMENT_TEST_MODE is enabled (just like in ridewithdriver)
-    if (phonepeConfig.isTestMode) {
-      console.log(`🧪 [Payment] PAYMENT_TEST_MODE is true. Simulating PhonePe transaction for ${merchantTransactionId}`);
-      
-      const simulatedRedirectUrl = `${phonepeConfig.callbackUrl}?merchantTransactionId=${merchantTransactionId}&code=PAYMENT_SUCCESS&transactionId=SIMULATED_${Date.now()}`;
-      
-      return {
-        isTestMode: true,
-        merchantTransactionId,
-        paymentUrl: simulatedRedirectUrl,
-        message: 'Test mode enabled. Redirecting to simulated payment completion handler.',
-      };
-    }
-
-    // Production / UAT Live API Call
-    const redirectUrl = `${phonepeConfig.frontendUrl}/orders/${order.id}?txn=${merchantTransactionId}`;
-    const { base64Payload } = createPhonePePayload({
-      merchantTransactionId,
-      userId,
-      amount: order.totalAmount,
-      mobileNumber: order.shippingPhone || order.userProfile?.phone || undefined,
-      redirectUrl,
-    });
-
-    const xVerifyHeader = generatePhonePeChecksum(base64Payload, '/pg/v1/pay');
-
     try {
-      const response = await fetch(`${phonepeConfig.hostUrl}/pg/v1/pay`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-VERIFY': xVerifyHeader,
-        },
-        body: JSON.stringify({ request: base64Payload }),
+      const paymentResult = await phonepeClient.createPaymentOrder({
+        merchantTransactionId,
+        amount: order.totalAmount,
+        userId,
+        orderId: order.id,
+        mobileNumber: order.shippingPhone || order.userProfile?.phone || undefined,
       });
 
-      const responseData: any = await response.json();
-
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: { responsePayload: responseData },
-      });
-
-      if (responseData.success && responseData.data?.instrumentResponse?.redirectInfo?.url) {
-        return {
-          isTestMode: false,
-          merchantTransactionId,
-          paymentUrl: responseData.data.instrumentResponse.redirectInfo.url,
-        };
-      } else {
-        throw createError(400, responseData.message || 'Payment initiation failed at gateway');
+      if (paymentResult.rawResponse) {
+        await prisma.payment.update({
+          where: { id: payment.id },
+          data: { responsePayload: paymentResult.rawResponse },
+        });
       }
+
+      return {
+        isTestMode: paymentResult.isTestMode,
+        merchantTransactionId,
+        paymentUrl: paymentResult.paymentUrl,
+        message: paymentResult.isTestMode
+          ? 'Test mode enabled. Redirecting to simulated payment completion.'
+          : 'Redirecting to PhonePe gateway.',
+      };
     } catch (err: any) {
-      console.error('PhonePe API Error:', err);
-      throw createError(500, err.message || 'Payment gateway connection error');
+      console.error('Payment Initiation Error:', err);
+      throw createError(500, err.message || 'Failed to initiate payment');
     }
   }
 
   static async handlePhonePeCallback(body: any, headers?: any) {
     console.log('💳 PhonePe Callback Received:', body);
 
-    let merchantTransactionId = body.merchantTransactionId || body.data?.merchantTransactionId;
-    let isSuccess = body.code === 'PAYMENT_SUCCESS' || body.success === true || body.data?.code === 'PAYMENT_SUCCESS';
+    let merchantTransactionId =
+      body.merchantTransactionId ||
+      body.data?.merchantTransactionId ||
+      body.merchantOrderId ||
+      body.data?.merchantOrderId;
+
+    let isSuccess =
+      body.code === 'PAYMENT_SUCCESS' ||
+      body.success === true ||
+      body.data?.code === 'PAYMENT_SUCCESS' ||
+      body.data?.state === 'COMPLETED' ||
+      body.state === 'COMPLETED';
 
     if (!merchantTransactionId) {
       throw createError(400, 'Invalid callback payload: missing merchantTransactionId');
@@ -118,39 +94,69 @@ export class PaymentService {
 
     const payment = await prisma.payment.findUnique({
       where: { merchantTransactionId },
-      include: { order: true },
+      include: { order: { include: { items: true } } },
     });
 
     if (!payment) {
       throw createError(404, 'Payment record not found');
     }
 
-    // Verify response signature if not test mode
-    if (!phonepeConfig.isTestMode && headers && headers['x-verify']) {
-      const isValid = verifyPhonePeChecksum(body.response || '', headers['x-verify']);
-      if (!isValid) {
-        console.warn('⚠️ Warning: PhonePe Callback checksum verification failed');
-      }
-    }
-
     if (isSuccess) {
-      await prisma.$transaction([
-        prisma.payment.update({
+      await prisma.$transaction(async (tx) => {
+        await tx.payment.update({
           where: { id: payment.id },
           data: {
             status: 'COMPLETED',
             gatewayTransactionId: body.transactionId || body.data?.transactionId || `GW_${Date.now()}`,
             responsePayload: body,
           },
-        }),
-        prisma.order.update({
+        });
+
+        await tx.order.update({
           where: { id: payment.orderId },
           data: {
             status: 'PAID',
             paymentStatus: 'COMPLETED',
           },
-        }),
-      ]);
+        });
+
+        // Deduct stock for all ordered products & variants upon payment confirmation
+        for (const item of payment.order.items) {
+          if (item.productId) {
+            const updatedProduct = await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                stock: { decrement: item.quantity },
+              },
+            });
+
+            if (updatedProduct.stock <= 0) {
+              await tx.product.update({
+                where: { id: item.productId },
+                data: { status: 'OUT_OF_STOCK' },
+              });
+            }
+
+            await tx.inventoryLog.create({
+              data: {
+                productId: item.productId,
+                change: -item.quantity,
+                type: 'ORDER_RESERVATION',
+                reason: `Stock deducted for paid Order #${payment.order.orderNumber}`,
+              },
+            });
+          }
+
+          if (item.variantId) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: {
+                stock: { decrement: item.quantity },
+              },
+            });
+          }
+        }
+      });
 
       emitOrderStatusUpdate(payment.orderId, {
         orderId: payment.orderId,
@@ -159,6 +165,20 @@ export class PaymentService {
         paymentStatus: 'COMPLETED',
         updatedAt: new Date(),
       });
+
+      // Clear user cart items upon successful payment confirmation
+      try {
+        const userCart = await prisma.cart.findUnique({
+          where: { userProfileId: payment.order.userProfileId },
+        });
+        if (userCart) {
+          await prisma.cartItem.deleteMany({
+            where: { cartId: userCart.id },
+          });
+        }
+      } catch (cartErr) {
+        console.error('Failed to clear cart after payment:', cartErr);
+      }
 
       // Generate and send invoice asynchronously
       InvoiceService.generateInvoice(payment.orderId)
@@ -201,33 +221,7 @@ export class PaymentService {
       throw createError(404, 'Payment transaction not found');
     }
 
-    if (phonepeConfig.isTestMode) {
-      return {
-        merchantTransactionId,
-        status: payment.status,
-        orderStatus: payment.order.status,
-        amount: payment.amount,
-        isTestMode: true,
-      };
-    }
-
-    const xVerifyHeader = generatePhonePeStatusChecksum(merchantTransactionId);
-    const url = `${phonepeConfig.hostUrl}/pg/v1/status/${phonepeConfig.merchantId}/${merchantTransactionId}`;
-
-    try {
-      const res = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-VERIFY': xVerifyHeader,
-          'X-MERCHANT-ID': phonepeConfig.merchantId,
-        },
-      });
-
-      const responseData: any = await res.json();
-      return responseData;
-    } catch (err: any) {
-      throw createError(500, 'Error verifying status from PhonePe gateway');
-    }
+    const statusResult = await phonepeClient.checkTransactionStatus(merchantTransactionId);
+    return statusResult;
   }
 }

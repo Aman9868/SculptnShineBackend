@@ -17,7 +17,27 @@ export class BusinessConfigController {
 
   static async updateConfig(req: Request, res: Response, next: NextFunction) {
     try {
-      const config = await BusinessConfigService.upsertConfig(req.body);
+      const {
+        brandName,
+        address,
+        gstNumber,
+        supportEmail,
+        supportPhone,
+        instagramUrl,
+        facebookUrl,
+        youtubeUrl,
+      } = req.body;
+
+      const config = await BusinessConfigService.upsertConfig({
+        brandName,
+        address,
+        gstNumber,
+        supportEmail,
+        supportPhone,
+        instagramUrl,
+        facebookUrl,
+        youtubeUrl,
+      });
       res.status(200).json({
         success: true,
         message: 'Business configuration updated successfully',

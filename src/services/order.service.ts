@@ -1,6 +1,8 @@
 import { prisma } from '../config/prisma';
 import { emitOrderStatusUpdate, emitNewOrderToAdmin } from '../config/socket';
 import { ShippingService } from './shipping.service';
+import { NotificationService } from './notification.service';
+
 
 const createError = (statusCode: number, message: string) => {
   const error: any = new Error(message);
@@ -109,34 +111,8 @@ export class OrderService {
         },
       });
 
-      // Deduct stock & write InventoryLogs
-      for (const item of cart.items) {
-        const updatedProduct = await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            stock: { decrement: item.quantity },
-          },
-        });
-
-        if (updatedProduct.stock <= 0) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { status: 'OUT_OF_STOCK' },
-          });
-        }
-
-        await tx.inventoryLog.create({
-          data: {
-            productId: item.productId,
-            change: -item.quantity,
-            type: 'ORDER_RESERVATION',
-            reason: `Stock reserved for Order #${orderNumber}`,
-          },
-        });
-      }
-
-      // Clear cart
-      await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+      // Note: Stock is validated here and will be deducted upon successful payment confirmation in payment.service.ts
+      // Note: Cart items are preserved and will be cleared only upon successful payment confirmation in payment.service.ts
 
       return newOrder;
     });
@@ -159,28 +135,37 @@ export class OrderService {
 
     const previousStatus = existingOrder.status;
 
-    // Handle stock restoration if order gets cancelled
-    if (newStatus === 'CANCELLED' && previousStatus !== 'CANCELLED') {
+    // Handle stock restoration if a paid/confirmed order gets cancelled
+    if (newStatus === 'CANCELLED' && previousStatus !== 'CANCELLED' && existingOrder.paymentStatus === 'COMPLETED') {
       await prisma.$transaction(async (tx) => {
         for (const item of existingOrder.items) {
-          if (!item.productId) continue;
-          
-          await tx.product.update({
-            where: { id: item.productId },
-            data: {
-              stock: { increment: item.quantity },
-              status: 'ACTIVE',
-            },
-          });
+          if (item.productId) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                stock: { increment: item.quantity },
+                status: 'ACTIVE',
+              },
+            });
 
-          await tx.inventoryLog.create({
-            data: {
-              productId: item.productId,
-              change: item.quantity,
-              type: 'ORDER_CANCELLED_RESTOCK',
-              reason: `Restock due to order cancellation: ${existingOrder.orderNumber}`,
-            },
-          });
+            await tx.inventoryLog.create({
+              data: {
+                productId: item.productId,
+                change: item.quantity,
+                type: 'ORDER_CANCELLED_RESTOCK',
+                reason: `Restock due to order cancellation: ${existingOrder.orderNumber}`,
+              },
+            });
+          }
+
+          if (item.variantId) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: {
+                stock: { increment: item.quantity },
+              },
+            });
+          }
         }
       });
     }
@@ -214,6 +199,19 @@ export class OrderService {
       updatedAt: updatedOrder.updatedAt,
       history: updatedOrder.statusHistory,
     });
+
+    // Send push & in-app notification to the user
+    try {
+      await NotificationService.sendToUser(
+        updatedOrder.userProfileId,
+        'Order Updated',
+        `Your order #${updatedOrder.orderNumber} status is now ${newStatus}.`,
+        'ORDER_UPDATE',
+        `/orders`
+      );
+    } catch (err) {
+      console.error('Failed to send order status update notification:', err);
+    }
 
     return updatedOrder;
   }

@@ -1,71 +1,219 @@
 import crypto from 'crypto';
+import axios from 'axios';
 
-export const phonepeConfig = {
-  isTestMode: process.env.PAYMENT_TEST_MODE === 'true',
-  merchantId: process.env.PHONEPE_MERCHANT_ID || 'ONLINEPGUAT',
-  saltKey: process.env.PHONEPE_SALT_KEY || '099eb0cd-02aa-4e96-a76f-2e55162824c4',
-  saltIndex: process.env.PHONEPE_SALT_INDEX || '1',
-  hostUrl: process.env.PHONEPE_HOST_URL || 'https://api-preprod.phonepe.com/apis/pg-sandbox',
+export interface PhonePeConfigType {
+  isTestMode: boolean;
+  clientId: string;
+  clientSecret: string;
+  clientVersion: string;
+  merchantId: string;
+  baseUrl: string;
+  callbackUrl: string;
+  redirectUrl: string;
+  frontendUrl: string;
+}
+
+const parseClientSecret = (secret?: string): string => {
+  if (!secret) return '';
+  if (!secret.includes('-')) {
+    try {
+      const decoded = Buffer.from(secret, 'base64').toString('utf-8');
+      if (decoded.includes('-')) {
+        return decoded;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return secret;
+};
+
+export const phonepeConfig: PhonePeConfigType = {
+  isTestMode: process.env.PAYMENT_TEST_MODE !== 'false', // default to test mode if true or unset
+  clientId: process.env.PHONEPE_CLIENT_ID || process.env.PHONEPE_MERCHANT_ID || 'SU2606191700471590659908',
+  clientSecret: parseClientSecret(process.env.PHONEPE_CLIENT_SECRET || process.env.PHONEPE_SALT_KEY || 'd4959e2b-0e37-4ae9-9698-5c58db27d201'),
+  clientVersion: process.env.PHONEPE_CLIENT_VERSION || process.env.PHONEPE_SALT_INDEX || '1',
+  merchantId: process.env.PHONEPE_MERCHANT_ID || 'SU2606191700471590659908',
+  baseUrl: process.env.PHONEPE_BASE_URL || 'https://api.phonepe.com/apis/hermes',
   callbackUrl: process.env.PHONEPE_CALLBACK_URL || 'http://localhost:5000/api/payments/phonepe/callback',
+  redirectUrl: process.env.PHONEPE_REDIRECT_URL || 'http://localhost:3000/checkout',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
 };
 
-/**
- * Generate base64 payload string for PhonePe /pg/v1/pay API
- */
-export const createPhonePePayload = (params: {
-  merchantTransactionId: string;
-  userId: string;
-  amount: number; // in rupees
-  mobileNumber?: string;
-  redirectUrl: string;
-}): { base64Payload: string; rawPayload: object } => {
-  const payload = {
-    merchantId: phonepeConfig.merchantId,
-    merchantTransactionId: params.merchantTransactionId,
-    merchantUserId: params.userId,
-    amount: Math.round(params.amount * 100), // amount in paise
-    redirectUrl: params.redirectUrl,
-    redirectMode: 'POST',
-    callbackUrl: phonepeConfig.callbackUrl,
-    mobileNumber: params.mobileNumber || '9999999999',
-    paymentInstrument: {
-      type: 'PAY_PAGE',
-    },
-  };
+class PhonePeClient {
+  private accessToken: string | null = null;
+  private tokenExpiry = 0;
 
-  const jsonString = JSON.stringify(payload);
-  const base64Payload = Buffer.from(jsonString).toString('base64');
-  return { base64Payload, rawPayload: payload };
-};
+  get isProd(): boolean {
+    return !phonepeConfig.isTestMode;
+  }
 
-/**
- * Generate X-VERIFY checksum header for PhonePe request
- * Formula: SHA256(base64Payload + apiEndpoint + saltKey) + "###" + saltIndex
- */
-export const generatePhonePeChecksum = (base64Payload: string, apiEndpoint: string = '/pg/v1/pay'): string => {
-  const dataToHash = base64Payload + apiEndpoint + phonepeConfig.saltKey;
-  const sha256 = crypto.createHash('sha256').update(dataToHash).digest('hex');
-  return `${sha256}###${phonepeConfig.saltIndex}`;
-};
+  /**
+   * Fetch OAuth access token for PhonePe V2 API.
+   */
+  async getAccessToken(): Promise<string> {
+    if (this.accessToken && Date.now() < this.tokenExpiry - 60000) {
+      return this.accessToken;
+    }
 
-/**
- * Generate X-VERIFY checksum for status check GET request
- * Formula: SHA256("/pg/v1/status/" + merchantId + "/" + merchantTransactionId + saltKey) + "###" + saltIndex
- */
-export const generatePhonePeStatusChecksum = (merchantTransactionId: string): string => {
-  const apiEndpoint = `/pg/v1/status/${phonepeConfig.merchantId}/${merchantTransactionId}`;
-  const dataToHash = apiEndpoint + phonepeConfig.saltKey;
-  const sha256 = crypto.createHash('sha256').update(dataToHash).digest('hex');
-  return `${sha256}###${phonepeConfig.saltIndex}`;
-};
+    const authUrl = this.isProd
+      ? 'https://api.phonepe.com/apis/identity-manager/v1/oauth/token'
+      : 'https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token';
 
-/**
- * Verify response/callback checksum from PhonePe
- */
-export const verifyPhonePeChecksum = (responseBase64: string, receivedChecksum: string): boolean => {
-  const dataToHash = responseBase64 + phonepeConfig.saltKey;
-  const calculatedHash = crypto.createHash('sha256').update(dataToHash).digest('hex');
-  const expectedChecksum = `${calculatedHash}###${phonepeConfig.saltIndex}`;
-  return expectedChecksum === receivedChecksum;
-};
+    const params = new URLSearchParams();
+    params.append('grant_type', 'client_credentials');
+    params.append('client_id', phonepeConfig.clientId);
+    params.append('client_secret', phonepeConfig.clientSecret);
+    params.append('client_version', phonepeConfig.clientVersion);
+
+    try {
+      const response = await axios.post(authUrl, params.toString(), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+
+      if (response.data && response.data.access_token) {
+        this.accessToken = response.data.access_token;
+        const expiresInMs = (response.data.expires_in || 3600) * 1000;
+        this.tokenExpiry = Date.now() + expiresInMs;
+        return this.accessToken!;
+      } else {
+        throw new Error('Failed to fetch PhonePe OAuth token: invalid response');
+      }
+    } catch (error: any) {
+      console.error('PhonePe OAuth error:', error.response?.data || error.message);
+      throw new Error(`Failed to fetch PhonePe V2 access token: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
+   * Create PhonePe V2 payment session
+   */
+  async createPaymentOrder(params: {
+    merchantTransactionId: string;
+    amount: number; // in rupees
+    userId: string;
+    orderId: string;
+    mobileNumber?: string;
+  }): Promise<{ isTestMode: boolean; merchantTransactionId: string; paymentUrl: string; rawResponse?: any }> {
+    const { merchantTransactionId, amount, userId, orderId } = params;
+
+    // Normal payment in test mode (no gateway needed)
+    if (!this.isProd) {
+      console.log(`🧪 [Payment] PAYMENT_TEST_MODE is true. Creating simulated payment redirect for ${merchantTransactionId}`);
+      const simulatedRedirectUrl = `${phonepeConfig.callbackUrl}?merchantTransactionId=${merchantTransactionId}&code=PAYMENT_SUCCESS&transactionId=SIMULATED_${Date.now()}`;
+      return {
+        isTestMode: true,
+        merchantTransactionId,
+        paymentUrl: simulatedRedirectUrl,
+      };
+    }
+
+    // Real PhonePe V2 API in Production
+    const amountInPaise = Math.round(amount * 100);
+    const redirectUrl = `${phonepeConfig.redirectUrl}?status=pending&order_id=${orderId}&txn=${merchantTransactionId}`;
+
+    const payload = {
+      merchantOrderId: merchantTransactionId,
+      amount: amountInPaise,
+      paymentFlow: {
+        type: 'PG_CHECKOUT',
+        merchantUrls: {
+          redirectUrl,
+        },
+      },
+      metaInfo: {
+        udf1: String(userId || ''),
+        udf2: String(orderId || ''),
+      },
+    };
+
+    const token = await this.getAccessToken();
+    const payUrl = 'https://api.phonepe.com/apis/pg/checkout/v2/pay';
+
+    console.log(`[PhonePe V2] Initiating payment for order ${orderId} (${amountInPaise} paise)`);
+
+    try {
+      const response = await axios.post(payUrl, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `O-Bearer ${token}`,
+        },
+      });
+
+      const data = response.data;
+      const checkoutRedirectUrl =
+        data?.redirectUrl ||
+        data?.data?.instrumentResponse?.redirectInfo?.url ||
+        data?.instrumentResponse?.redirectInfo?.url;
+
+      if (checkoutRedirectUrl) {
+        return {
+          isTestMode: false,
+          merchantTransactionId,
+          paymentUrl: checkoutRedirectUrl,
+          rawResponse: data,
+        };
+      }
+
+      throw new Error(`PhonePe API did not return redirect URL: ${JSON.stringify(data)}`);
+    } catch (error: any) {
+      const errData = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+      console.error('PhonePe V2 order creation error:', errData);
+      throw new Error(`Failed to create PhonePe payment: ${errData}`);
+    }
+  }
+
+  /**
+   * Check status of transaction
+   */
+  async checkTransactionStatus(merchantTransactionId: string): Promise<any> {
+    if (!this.isProd) {
+      return {
+        success: true,
+        code: 'PAYMENT_SUCCESS',
+        state: 'COMPLETED',
+        merchantOrderId: merchantTransactionId,
+        orderId: `test_pp_gateway_${merchantTransactionId}`,
+        transactionId: `test_txn_${Date.now()}`,
+        message: 'Test payment simulated',
+      };
+    }
+
+    try {
+      const token = await this.getAccessToken();
+      const statusUrl = `https://api.phonepe.com/apis/pg/checkout/v2/order/${merchantTransactionId}/status`;
+
+      const response = await axios.get(statusUrl, {
+        params: {
+          details: false,
+          errorContext: true,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `O-Bearer ${token}`,
+        },
+      });
+
+      const data = response.data;
+      const state = data.state || data.data?.state;
+      const isSuccess = String(state || '').toUpperCase() === 'COMPLETED';
+
+      return {
+        success: isSuccess,
+        state,
+        code: data.code,
+        merchantOrderId: data.merchantOrderId || merchantTransactionId,
+        orderId: data.orderId,
+        transactionId: data.transactionId,
+        rawResponse: data,
+      };
+    } catch (error: any) {
+      console.error('PhonePe V2 status check error:', error.response?.data || error.message);
+      throw new Error(`Failed to check PhonePe transaction status: ${error.message}`);
+    }
+  }
+}
+
+export const phonepeClient = new PhonePeClient();

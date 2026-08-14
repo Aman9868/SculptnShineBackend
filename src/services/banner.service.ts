@@ -15,7 +15,11 @@ export class BannerService {
     const where: any = {};
 
     if (query.type) {
-      where.type = query.type;
+      if (query.type.includes(',')) {
+        where.type = { in: query.type.split(',').map((t) => t.trim()) };
+      } else {
+        where.type = query.type;
+      }
     }
 
     if (query.status) {
@@ -168,7 +172,19 @@ export class BannerService {
   }
 
   static async getBannerKPIs() {
-    const [total, active, inactive, scheduled, homeGeneralCount, promoCount, categoryHeaderCount] = await Promise.all([
+    const [
+      total, 
+      active, 
+      inactive, 
+      scheduled, 
+      homeGeneralCount, 
+      promoCount, 
+      categoryHeaderCount,
+      brandHeaderCount,
+      loginBgCount,
+      signupBgCount,
+      homeProductCount
+    ] = await Promise.all([
       prisma.banner.count(),
       prisma.banner.count({ where: { status: 'ACTIVE' } }),
       prisma.banner.count({ where: { status: 'INACTIVE' } }),
@@ -176,9 +192,24 @@ export class BannerService {
       prisma.banner.count({ where: { type: 'HOME_GENERAL' } }),
       prisma.banner.count({ where: { type: 'PROMO' } }),
       prisma.banner.count({ where: { type: 'CATEGORY_HEADER' } }),
+      prisma.banner.count({ where: { type: 'BRAND_HEADER' } }),
+      prisma.banner.count({ where: { type: 'LOGIN_BG' } }),
+      prisma.banner.count({ where: { type: 'SIGNUP_BG' } }),
+      prisma.banner.count({ where: { type: 'HOME_PRODUCT' } }),
     ]);
 
-    return { total, active, inactive, scheduled, homeGeneralCount, promoCount, categoryHeaderCount };
+    return { 
+      total, 
+      active, 
+      inactive, 
+      scheduled, 
+      homeGeneralCount, 
+      promoCount, 
+      categoryHeaderCount,
+      brandHeaderCount,
+      authBgCount: loginBgCount + signupBgCount,
+      homeProductCount
+    };
   }
 
   static async getPublicBanners(type?: string) {

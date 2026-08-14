@@ -9,27 +9,43 @@ export class BusinessConfigService {
     return config;
   }
 
-  static async upsertConfig(data: {
+  static async upsertConfig(data: Partial<{
     brandName: string;
     address: string;
     gstNumber: string;
     supportEmail?: string;
     supportPhone?: string;
-    freeShippingThreshold?: number;
-    standardShippingCharge?: number;
     instagramUrl?: string;
     facebookUrl?: string;
     youtubeUrl?: string;
-  }) {
+  }>) {
     const existing = await prisma.businessConfig.findFirst();
     if (existing) {
       return await prisma.businessConfig.update({
         where: { id: existing.id },
-        data,
+        data: {
+          brandName: data.brandName !== undefined ? data.brandName : existing.brandName,
+          address: data.address !== undefined ? data.address : existing.address,
+          gstNumber: data.gstNumber !== undefined ? data.gstNumber : existing.gstNumber,
+          supportEmail: data.supportEmail !== undefined ? data.supportEmail : existing.supportEmail,
+          supportPhone: data.supportPhone !== undefined ? data.supportPhone : existing.supportPhone,
+          instagramUrl: data.instagramUrl !== undefined ? data.instagramUrl : existing.instagramUrl,
+          facebookUrl: data.facebookUrl !== undefined ? data.facebookUrl : existing.facebookUrl,
+          youtubeUrl: data.youtubeUrl !== undefined ? data.youtubeUrl : existing.youtubeUrl,
+        },
       });
     } else {
       return await prisma.businessConfig.create({
-        data,
+        data: {
+          brandName: data.brandName || 'Sculpt & Shine',
+          address: data.address || '',
+          gstNumber: data.gstNumber || '',
+          supportEmail: data.supportEmail || null,
+          supportPhone: data.supportPhone || null,
+          instagramUrl: data.instagramUrl || null,
+          facebookUrl: data.facebookUrl || null,
+          youtubeUrl: data.youtubeUrl || null,
+        },
       });
     }
   }

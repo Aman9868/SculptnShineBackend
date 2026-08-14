@@ -17,7 +17,12 @@ export class SalesController {
 
   static async getSalesAnalytics(req: Request, res: Response, next: NextFunction) {
     try {
-      const analytics = await SalesService.getSalesAnalytics();
+      const { startDate, endDate, days } = req.query as { startDate?: string; endDate?: string; days?: string };
+      const analytics = await SalesService.getSalesAnalytics({
+        startDate,
+        endDate,
+        days: days ? parseInt(days, 10) : undefined,
+      });
       res.status(200).json({
         success: true,
         message: 'Sales analytics fetched successfully',

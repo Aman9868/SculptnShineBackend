@@ -24,7 +24,10 @@ import ticketRoutes from './routes/ticket.routes';
 import reviewRoutes from './routes/review.routes';
 import supportInfoRoutes from './routes/support-info.routes';
 import guideRoutes from './routes/guide.routes';
+import notificationRoutes from './routes/notification.routes';
 import { requestContextMiddleware } from './config/request-context';
+import './workers/notification.worker'; // Initialize BullMQ worker
+
 
 const app = express();
 
@@ -62,6 +65,7 @@ app.use('/api/support', ticketRoutes);
 app.use('/api/support/info', supportInfoRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/guides', guideRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {

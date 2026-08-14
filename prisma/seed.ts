@@ -479,6 +479,7 @@ async function seedProducts() {
             unitPrice: Number(v.price),
             discountPercentage: v.discountPrice ? Math.round((1 - (Number(v.discountPrice) / Number(v.price))) * 100) : 0,
             gst: 18,
+            expiryDate: v.expiryDate ? new Date(v.expiryDate) : (p.expiryDate ? new Date(p.expiryDate) : null),
             stock: Number(v.stock || 0),
             images: v.images || [],
           }))

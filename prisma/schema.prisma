@@ -46,6 +46,8 @@ model UserProfile {
   wishlistItems WishlistItem[]
   supportTickets SupportTicket[]
   reviews      ProductReview[]
+  notifications Notification[]
+  pushSubscriptions PushSubscription[]
 }
 
 enum Role {
@@ -222,6 +224,7 @@ model ProductVariant {
   unitPrice     Float
   discountPercentage Float?    @default(0)
   gst           Float          @default(18)
+  expiryDate    DateTime?
   stock         Int            @default(0)
   images        String[]       @default([])
   isDefault     Boolean        @default(false)
@@ -399,8 +402,6 @@ model BusinessConfig {
   gstNumber    String
   supportEmail           String?
   supportPhone           String?
-  freeShippingThreshold  Int      @default(999)
-  standardShippingCharge Int      @default(50)
   instagramUrl           String?
   facebookUrl            String?
   youtubeUrl             String?
@@ -557,3 +558,33 @@ model Guide {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+enum NotificationType {
+  ORDER_UPDATE
+  PROMO
+  SYSTEM
+}
+
+model Notification {
+  id            String           @id @default(uuid())
+  userProfileId String
+  userProfile   UserProfile      @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  title         String
+  message       String           @db.Text
+  type          NotificationType @default(SYSTEM)
+  link          String?
+  isRead        Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+}
+
+model PushSubscription {
+  id            String      @id @default(uuid())
+  userProfileId String
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  endpoint      String      @unique
+  p256dh        String
+  auth          String
+  userAgent     String?
+  createdAt     DateTime    @default(now())
+}
+

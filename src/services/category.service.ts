@@ -88,10 +88,10 @@ export class CategoryService {
       select: { flavor: true, weight: true }
     });
 
-    // Get all products to calculate preference and brand counts
+    // Get all products to calculate preference, brand, and rating counts
     const products = await prisma.product.findMany({
-      where: { categoryId: category.id },
-      select: { preference: true, brand: { select: { name: true } } }
+      where: { categoryId: category.id, status: 'ACTIVE' },
+      select: { preference: true, averageRating: true, reviewCount: true, brand: { select: { name: true } } }
     });
 
     const getCounts = (items: any[], key: string) => {
@@ -110,7 +110,13 @@ export class CategoryService {
     const preferences = getCounts(products, 'preference');
     const brands = getCounts(products, 'brand.name');
 
-    return { flavors, weights, preferences, brands };
+    const ratedProducts = products.filter(p => p.reviewCount > 0 && p.averageRating > 0);
+    const ratings = [4, 3, 2, 1].map(stars => ({
+      stars,
+      count: ratedProducts.filter(p => p.averageRating >= stars).length
+    })).filter(r => r.count > 0);
+
+    return { flavors, weights, preferences, brands, ratings };
   }
 
   static async updateCategory(id: string, data: any) {
