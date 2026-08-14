@@ -3,15 +3,16 @@
     "id": "nb-prod-001-dym-iso100-str",
     "title": "Dymatize ISO100 Hydrolyzed 100% Whey Isolate (Strawberry)",
     "slug": "dymatize-iso100-hydrolyzed-strawberry-76-servings",
-    "description": "Dymatize ISO100 Hydrolyzed 100% Whey Protein Isolate with 25g protein, 5.5g BCAAs per serving. 76 Servings Strawberry flavor.",
+    "description": "<h3>DESCRIPTION</h3>\n<p>Dymatize ISO100 is pure muscle-building fuel. Formulated using a cross-flow microfiltration, multi-step purification process that preserves vital muscle-building protein fractions while removing excess carbohydrates, fat, lactose, and cholesterol. Each serving provides <strong>25g of hydrolyzed 100% whey protein isolate</strong> and <strong>5.5g of Branched Chain Amino Acids (BCAAs)</strong> for rapid muscle recovery.</p>\n<h4>Key Highlights:</h4>\n<ul>\n  <li><strong>25g Hydrolyzed Whey Isolate:</strong> Ultra-fast absorbing protein to stimulate muscle protein synthesis.</li>\n  <li><strong>5.5g BCAAs & 2.7g Leucine:</strong> Essential amino acids to accelerate muscle repair and reduce fatigue.</li>\n  <li><strong>Zero Sugar & Fat:</strong> Less than 1g of sugar and carbs per scoop for clean lean gains.</li>\n  <li><strong>Informed-Choice Certified:</strong> 100% tested for banned substances and guaranteed safe.</li>\n</ul>\n\n<h3>INGREDIENTS</h3>\n<p>Hydrolyzed Whey Protein Isolate, Whey Protein Isolate, Natural and Artificial Strawberry Flavors, Beet Juice Powder (for natural color), Citric Acid, Malic Acid, Sucralose, Steviol Glycosides.</p>\n<p><em>Allergen Info: Contains milk and soy derivatives. Gluten-free.</em></p>\n\n<h3>NUTRITION FACTS</h3>\n<p>Serving Size: 1 Scoop (~30g) | Servings Per Container: Approx. 76</p>\n<ul>\n  <li>Calories: 110 kcal</li>\n  <li>Protein: 25g (50% DV)</li>\n  <li>Total Carbohydrates: 1g (0% DV)</li>\n  <li>Total Fat: 0g (0% DV)</li>\n  <li>Sodium: 160mg (7% DV)</li>\n</ul>\n\n<h3>HOW TO USE</h3>\n<p>Add 1 scoop (30g) to 150ml–180ml of cold water, milk, or your favorite beverage. Shake vigorously for 20-30 seconds until completely dissolved. Consume immediately post-workout or in the morning to meet daily protein targets.</p>\n\n<h3>FAQS</h3>\n<p><strong>Q: Is Dymatize ISO100 lactose-free?</strong><br/>A: The cross-flow microfiltration process removes over 99% of lactose, making it suitable for lactose-sensitive individuals.</p>\n<p><strong>Q: Can I take this while cutting or shredding?</strong><br/>A: Absolutely. With zero sugar and fat and only 110 calories per scoop, it is ideal for lean definition.</p>",
     "price": 17999,
     "discountPrice": 14039,
     "sku": "DYM-ISO100-STR-5LB",
     "stock": 2,
     "lowStockAlert": 1,
     "images": [
-      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1000&q=85"
     ],
     "status": "ACTIVE",
     "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
@@ -29,7 +30,7 @@
         "discountPrice": 14039,
         "stock": 2,
         "images": [
-          "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+          "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=1000&q=85"
         ]
       }
     ]
@@ -38,15 +39,16 @@
     "id": "nb-prod-002-dym-iso100-gch",
     "title": "Dymatize ISO100 Hydrolyzed 100% Whey Isolate (Gourmet Chocolate)",
     "slug": "dymatize-iso100-hydrolyzed-gourmet-chocolate-71-servings",
-    "description": "Ultra-fast absorbing hydrolyzed whey protein isolate for rapid muscle recovery. 71 Servings Gourmet Chocolate flavor.",
+    "description": "<h3>DESCRIPTION</h3>\n<p>Known worldwide for legendary taste and unmatched purity, Dymatize ISO100 Gourmet Chocolate is engineered from hydrolyzed whey isolate. It digests lightning fast to flood muscle fibers with crucial amino acids right when your body needs them most.</p>\n<h4>Key Highlights:</h4>\n<ul>\n  <li><strong>25g Pure Isolate:</strong> Pure fast-acting protein matrix.</li>\n  <li><strong>5.5g BCAAs & 2.7g Leucine:</strong> Speed up post-workout muscle repair.</li>\n  <li><strong>Gourmet Chocolate Flavor:</strong> Decadent, rich chocolate milkshake taste that mixes instantly.</li>\n  <li><strong>Gluten-Free & Low Lactose:</strong> Gentle on the stomach with zero bloating.</li>\n</ul>\n\n<h3>INGREDIENTS</h3>\n<p>Hydrolyzed Whey Protein Isolate, Whey Protein Isolate, Cocoa Powder (Processed with Alkali), Natural and Artificial Flavors, Salt, Soy Lecithin, Potassium Chloride, Sucralose, Steviol Glycosides.</p>\n\n<h3>NUTRITION FACTS</h3>\n<p>Serving Size: 1 Scoop (~32g) | Servings Per Container: Approx. 71</p>\n<ul>\n  <li>Calories: 120 kcal</li>\n  <li>Protein: 25g (50% DV)</li>\n  <li>Total Carbohydrates: 2g (1% DV)</li>\n  <li>Total Fat: 2g (3% DV)</li>\n  <li>Sodium: 160mg (7% DV)</li>\n</ul>\n\n<h3>HOW TO USE</h3>\n<p>Mix 1 scoop with 180ml–240ml of cold water or skimmed milk. Shake for 25 seconds until silky smooth. Best consumed within 30 minutes following weight training.</p>\n\n<h3>FAQS</h3>\n<p><strong>Q: Does this mix well with a spoon?</strong><br/>A: Yes! ISO100 is instantized and blends effortlessly with a shaker cup, spoon, or blender.</p>",
     "price": 19999,
     "discountPrice": 15599,
     "sku": "DYM-ISO100-GCH-5LB",
     "stock": 5,
     "lowStockAlert": 2,
     "images": [
-      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=1000&q=85"
     ],
     "status": "ACTIVE",
     "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
@@ -64,7 +66,7 @@
         "discountPrice": 15599,
         "stock": 5,
         "images": [
-          "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80"
+          "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1000&q=85"
         ]
       }
     ]
@@ -73,15 +75,15 @@
     "id": "nb-prod-003-dym-elite-rch",
     "title": "Dymatize Elite 100% Whey Protein (Rich Chocolate)",
     "slug": "dymatize-elite-100-whey-rich-chocolate-63-servings",
-    "description": "100% Whey Protein blend with fast-absorbing whey concentrate & isolate. 63 Servings Rich Chocolate flavor.",
+    "description": "<h3>DESCRIPTION</h3>\n<p>Dymatize Elite 100% Whey Rich Chocolate is formulated for hard-training athletes. Featuring a multi-whey blend of whey concentrate, whey isolate, and hydrolyzed whey peptides to support sustained recovery and lean muscle tissue.</p>\n<h4>Key Highlights:</h4>\n<ul>\n  <li><strong>25g Protein Blend:</strong> Multi-phase whey matrix for sustained amino flow.</li>\n  <li><strong>5.5g BCAAs & 4g Glutamine:</strong> Comprehensive recovery support to prevent soreness.</li>\n  <li><strong>63 Generous Servings:</strong> Maximum value 5lb container.</li>\n</ul>\n\n<h3>INGREDIENTS</h3>\n<p>Whey Protein Blend (Whey Protein Concentrate, Whey Protein Isolate, Hydrolyzed Whey Protein Concentrate), Cocoa Powder, Natural and Artificial Flavors, Polydextrose, Soy Lecithin, Salt, Enzyme Blend (Protease, Lactase, Lipase), Sucralose.</p>\n\n<h3>NUTRITION FACTS</h3>\n<p>Serving Size: 1 Scoop (~36g) | Servings Per Container: Approx. 63</p>\n<ul>\n  <li>Calories: 140 kcal</li>\n  <li>Protein: 25g (50% DV)</li>\n  <li>Total Carbohydrates: 3g (1% DV)</li>\n  <li>Total Fat: 2.5g (3% DV)</li>\n</ul>\n\n<h3>HOW TO USE</h3>\n<p>Add 1 scoop to 200–250ml of cold water, milk, or almond milk. Drink 1-2 servings daily between meals or directly post-exercise.</p>\n\n<h3>FAQS</h3>\n<p><strong>Q: Who is Elite 100% Whey designed for?</strong><br/>A: Fitness enthusiasts, bodybuilders, and athletes looking for high-quality everyday protein supplementation.</p>",
     "price": 12999,
     "discountPrice": 9619,
     "sku": "DYM-ELITE-RCH-5LB",
     "stock": 3,
     "lowStockAlert": 1,
     "images": [
-      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80"
+      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1000&q=85"
     ],
     "status": "ACTIVE",
     "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
@@ -99,7 +101,7 @@
         "discountPrice": 9619,
         "stock": 3,
         "images": [
-          "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80"
+          "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1000&q=85"
         ]
       }
     ]
@@ -108,15 +110,15 @@
     "id": "nb-prod-004-osn-isogold-cch",
     "title": "One Science Nutrition ISO Gold 100% Whey Isolate (Chocolate Charge)",
     "slug": "one-science-iso-gold-chocolate-charge-70-servings",
-    "description": "Pure Whey Protein Isolate with 27g protein per serving and zero added sugar. 70 Servings Chocolate Charge.",
+    "description": "<h3>DESCRIPTION</h3>\n<p>One Science Nutrition ISO Gold is crafted from 100% pure grass-fed European Whey Isolate. Delivering an exceptional <strong>27g of pure protein per serving</strong> with DigeZyme patented digestive enzymes for optimal absorption without bloating.</p>\n<h4>Key Highlights:</h4>\n<ul>\n  <li><strong>27g Isolate Protein:</strong> Highest protein concentration per scoop.</li>\n  <li><strong>6.6g BCAAs & 5.2g Glutamine:</strong> Maximum anabolic recovery response.</li>\n  <li><strong>Zero Added Sugars:</strong> Ultra-clean formula with DigeZyme enzyme blend.</li>\n</ul>\n\n<h3>INGREDIENTS</h3>\n<p>Cross-Flow Microfiltered Grass-fed Whey Protein Isolate (Milk), Fat-Reduced Cocoa Powder, DigeZyme Multi-Enzyme Complex (Amylase, Neutral Protease, Cellulase, Lactase, Lipase), Sucralose, Natural Flavors.</p>\n\n<h3>NUTRITION FACTS</h3>\n<p>Serving Size: 1 Scoop (~30g) | Servings Per Container: Approx. 70</p>\n<ul>\n  <li>Calories: 110 kcal</li>\n  <li>Protein: 27g (54% DV)</li>\n  <li>Total Carbohydrates: 0.5g (0% DV)</li>\n  <li>Total Fat: 0.5g (1% DV)</li>\n</ul>\n\n<h3>HOW TO USE</h3>\n<p>Mix 1 scoop (30g) in 250ml of cold water. Take 1 serving immediately after training and 1 serving first thing in the morning.</p>\n\n<h3>FAQS</h3>\n<p><strong>Q: What makes ISO Gold superior?</strong><br/>A: It delivers 27g protein with grass-fed European purity and patented enzymes for zero digestion issues.</p>",
     "price": 11499,
     "discountPrice": 7474,
     "sku": "OSN-ISOGOLD-CCH-5LB",
     "stock": 2,
     "lowStockAlert": 1,
     "images": [
-      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=1000&q=85"
     ],
     "status": "ACTIVE",
     "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
@@ -134,7 +136,7 @@
         "discountPrice": 7474,
         "stock": 2,
         "images": [
-          "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+          "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=1000&q=85"
         ]
       }
     ]
@@ -143,15 +145,15 @@
     "id": "nb-prod-005-osn-whey-2lb",
     "title": "One Science Nutrition 100% Premium Whey Protein (2 Lbs / 28 Servings)",
     "slug": "one-science-100-premium-whey-protein-2lb",
-    "description": "Grass-fed European standard 100% Premium Whey Protein with 25g protein and 6.6g BCAAs. Available in Kesar Kulfi & Dubai Kunafa flavors.",
+    "description": "<h3>DESCRIPTION</h3>\n<p>One Science 100% Premium Whey Protein combines European whey concentrate and isolate with exotic artisan flavors including <em>Kesar Kulfi</em> and <em>Dubai Kunafa Chocolate</em> for an unmatched sensory experience.</p>\n<h4>Key Highlights:</h4>\n<ul>\n  <li><strong>25g Protein per Serving:</strong> Fast-absorbing whey peptides.</li>\n  <li><strong>6.6g BCAAs & 5.2g Glutamine:</strong> Protects muscle tissue from breakdown.</li>\n  <li><strong>Gourmet Exotic Flavors:</strong> Indulgent dessert taste with zero guilt.</li>\n</ul>\n\n<h3>INGREDIENTS</h3>\n<p>Whey Protein Concentrate (Milk), Whey Protein Isolate (Milk), Cardamom Extract & Saffron Threads (Kesar Kulfi) / Roasted Pistachio & Kataifi extract (Dubai Kunafa), Papain, Bromelain, Sucralose.</p>\n\n<h3>NUTRITION FACTS</h3>\n<p>Serving Size: 1 Scoop (~32g) | Servings Per Container: Approx. 28</p>\n<ul>\n  <li>Calories: 130 kcal</li>\n  <li>Protein: 25g (50% DV)</li>\n  <li>Total Carbohydrates: 2g (1% DV)</li>\n  <li>Total Fat: 1.8g (2% DV)</li>\n</ul>\n\n<h3>HOW TO USE</h3>\n<p>Add 1 scoop to 200ml of chilled milk or water. Shake for 20-30 seconds. Drink immediately for a dessert-like post-workout treat.</p>\n\n<h3>FAQS</h3>\n<p><strong>Q: Are real saffron & pistachio used?</strong><br/>A: Yes, One Science incorporates genuine botanical flavor extracts for rich authentic taste.</p>",
     "price": 4999,
     "discountPrice": 3499,
     "sku": "OSN-WHEY-2LB-COMBO",
     "stock": 9,
     "lowStockAlert": 2,
     "images": [
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=1000&q=85"
     ],
     "status": "ACTIVE",
     "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
@@ -169,7 +171,7 @@
         "discountPrice": 3499,
         "stock": 4,
         "images": [
-          "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80"
+          "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1000&q=85"
         ]
       },
       {
@@ -182,7 +184,7 @@
         "discountPrice": 3499,
         "stock": 5,
         "images": [
-          "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+          "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=1000&q=85"
         ]
       }
     ]
@@ -191,15 +193,15 @@
     "id": "nb-prod-006-osn-whey-5lb",
     "title": "One Science Nutrition 100% Premium Whey Protein (5 Lbs / 74 Servings)",
     "slug": "one-science-100-premium-whey-protein-5lb",
-    "description": "Premium Whey Protein enriched with whey peptides and digestive enzymes. Available in Dubai Kunafa Chocolate, Vanilla Very Berry, Chocolate Coconut, and Strawberry White Chocolate.",
+    "description": "<h3>DESCRIPTION</h3>\n<p>One Science Nutrition 100% Premium Whey 5 Lbs delivers 74 full servings of European grade grass-fed whey. Available in popular flavors: <strong>Dubai Kunafa Chocolate, Vanilla Very Berry, Chocolate Coconut,</strong> and <strong>Strawberry White Chocolate</strong>.</p>\n<h4>Key Highlights:</h4>\n<ul>\n  <li><strong>25g Protein per Scoop:</strong> Concentrated whey peptides for muscle maintenance.</li>\n  <li><strong>6.6g BCAAs & 5.2g Glutamine:</strong> Maximum muscle protection against fatigue.</li>\n  <li><strong>74 Mega Servings:</strong> Superior cost-per-serving value.</li>\n</ul>\n\n<h3>INGREDIENTS</h3>\n<p>Whey Protein Concentrate (Milk), Whey Protein Isolate (Milk), Whey Peptides, Natural Cocoa / Berry Extracts, DigeZyme Digestive Enzyme Blend, Salt, Sucralose.</p>\n\n<h3>NUTRITION FACTS</h3>\n<p>Serving Size: 1 Scoop (~30g) | Servings Per Container: Approx. 74</p>\n<ul>\n  <li>Calories: 120 kcal</li>\n  <li>Protein: 25g (50% DV)</li>\n  <li>Total Carbohydrates: 2g (1% DV)</li>\n  <li>Total Fat: 1.5g (2% DV)</li>\n</ul>\n\n<h3>HOW TO USE</h3>\n<p>Mix 1 scoop in 200–250ml cold water or milk. Consume 1-2 times daily after training or between meals.</p>\n\n<h3>FAQS</h3>\n<p><strong>Q: Does this contain digestive enzymes?</strong><br/>A: Yes, enriched with DigeZyme for smooth and rapid digestion.</p>",
     "price": 9849,
     "discountPrice": 9061,
     "sku": "OSN-WHEY-5LB-FLAVORS",
     "stock": 24,
     "lowStockAlert": 4,
     "images": [
-      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=1000&q=85"
     ],
     "status": "ACTIVE",
     "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
@@ -217,7 +219,7 @@
         "discountPrice": 9061,
         "stock": 6,
         "images": [
-          "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80"
+          "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1000&q=85"
         ]
       },
       {
@@ -230,7 +232,7 @@
         "discountPrice": 9061,
         "stock": 6,
         "images": [
-          "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+          "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=1000&q=85"
         ]
       },
       {
@@ -243,7 +245,7 @@
         "discountPrice": 9061,
         "stock": 6,
         "images": [
-          "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80"
+          "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1000&q=85"
         ]
       },
       {
@@ -256,7 +258,7 @@
         "discountPrice": 9061,
         "stock": 6,
         "images": [
-          "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+          "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=1000&q=85"
         ]
       }
     ]
@@ -265,15 +267,15 @@
     "id": "nb-prod-007-on-gold-drch",
     "title": "Optimum Nutrition (ON) Gold Standard 100% Whey (Double Rich Chocolate)",
     "slug": "optimum-nutrition-gold-standard-100-whey-double-rich-chocolate-5lb",
-    "description": "The world's best-selling whey protein powder with 24g protein and 5.5g naturally occurring BCAAs. 74 Servings Double Rich Chocolate.",
+    "description": "<h3>DESCRIPTION</h3>\n<p>The World's #1 Selling Whey Protein Powder. Optimum Nutrition Gold Standard 100% Whey delivers <strong>24g of whey protein isolate</strong> primary source with only 1g of sugar and 1g of fat per serving.</p>\n<h4>Key Highlights:</h4>\n<ul>\n  <li><strong>24g Protein per Serving:</strong> Whey Protein Isolate (WPI) main ingredient.</li>\n  <li><strong>5.5g Naturally Occurring BCAAs:</strong> Supports endurance and muscle recovery.</li>\n  <li><strong>4g Glutamine & Glutamic Acid:</strong> Accelerates cellular rehydration.</li>\n  <li><strong>Instantized Blendability:</strong> Mixes effortlessly with a glass and spoon.</li>\n</ul>\n\n<h3>INGREDIENTS</h3>\n<p>Protein Blend (Whey Protein Isolate, Whey Protein Concentrate, Whey Peptides), Cocoa (Processed with Alkali), Lecithin, Natural and Artificial Flavor, Acesulfame Potassium, Aminogen.</p>\n\n<h3>NUTRITION FACTS</h3>\n<p>Serving Size: 1 Scoop (~30.4g) | Servings Per Container: Approx. 74</p>\n<ul>\n  <li>Calories: 120 kcal</li>\n  <li>Protein: 24g (48% DV)</li>\n  <li>Total Carbohydrates: 3g (1% DV)</li>\n  <li>Total Fat: 1.5g (2% DV)</li>\n</ul>\n\n<h3>HOW TO USE</h3>\n<p>Stir 1 rounded scoop with a spoon into 180ml–240ml of cold water, milk, or beverage for 30 seconds until fully dissolved.</p>\n\n<h3>FAQS</h3>\n<p><strong>Q: Why is ON Gold Standard so famous?</strong><br/>A: It has been the worldwide industry gold standard for over 30 years with proven label accuracy.</p>",
     "price": 8509,
     "discountPrice": 6552,
     "sku": "ON-GS-DRCH-5LB",
     "stock": 7,
     "lowStockAlert": 2,
     "images": [
-      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1000&q=85"
     ],
     "status": "ACTIVE",
     "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
@@ -300,15 +302,15 @@
     "id": "nb-prod-008-bsn-syntha6-cms",
     "title": "BSN Syntha-6 Ultra-Premium Protein Matrix (Chocolate Milkshake)",
     "slug": "bsn-syntha-6-protein-chocolate-milkshake-5lb",
-    "description": "Multifunctional ultra-premium protein matrix with 22g protein per serving and delicious milkshake taste. 48 Servings Chocolate Milkshake.",
+    "description": "<h3>DESCRIPTION</h3>\n<p>BSN Syntha-6 is an ultra-premium protein powder designed for athletes seeking a sustained release amino acid flow with an unbeatable, milkshake-like texture and taste.</p>\n<h4>Key Highlights:</h4>\n<ul>\n  <li><strong>22g Multi-Functional Protein Matrix:</strong> Combines fast, medium, and slow-digesting proteins.</li>\n  <li><strong>10g Essential Amino Acids:</strong> Sustained nitrogen retention for 24/7 recovery.</li>\n  <li><strong>Milkshake Taste:</strong> Decadent dessert-like flavor profile.</li>\n</ul>\n\n<h3>INGREDIENTS</h3>\n<p>Protein Matrix (Whey Concentrate, Whey Isolate, Calcium Caseinate, Micellar Casein, Milk Isolate, Egg Albumin, Glutamine Peptides), Sunflower Creamer, Cocoa Powder, MCT Powder, Papain.</p>\n\n<h3>NUTRITION FACTS</h3>\n<p>Serving Size: 1 Scoop (~47g) | Servings Per Container: Approx. 48</p>\n<ul>\n  <li>Calories: 200 kcal</li>\n  <li>Protein: 22g (44% DV)</li>\n  <li>Total Carbohydrates: 15g (5% DV)</li>\n  <li>Total Fat: 6g (8% DV)</li>\n</ul>\n\n<h3>HOW TO USE</h3>\n<p>Mix 1 scoop with 150ml–200ml of cold water or whole milk. Take any time of the day or right before bedtime.</p>\n\n<h3>FAQS</h3>\n<p><strong>Q: Can Syntha-6 be used as a meal replacement?</strong><br/>A: Yes, its rich calorie and healthy fat profile make it an outstanding meal supplement.</p>",
     "price": 11999,
     "discountPrice": 7799,
     "sku": "BSN-SYNTHA6-CMS-5LB",
     "stock": 5,
     "lowStockAlert": 2,
     "images": [
-      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80"
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=1000&q=85"
     ],
     "status": "ACTIVE",
     "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
@@ -335,15 +337,15 @@
     "id": "nb-prod-009-scitec-100whey-choc",
     "title": "Scitec Nutrition 100% Whey Protein Professional (Chocolate)",
     "slug": "scitec-nutrition-100-whey-professional-chocolate-2-35kg",
-    "description": "100% Whey Protein Professional with amino acid matrix, Taurine, L-Glutamine, and Papain/Bromelain digestive enzymes. 78 Servings Chocolate.",
+    "description": "<h3>DESCRIPTION</h3>\n<p>Scitec Nutrition 100% Whey Protein Professional is an excellent quality whey protein blend fortified with an extra Amino Acid Matrix and digestive enzymes Papain and Bromelain.</p>\n<h4>Key Highlights:</h4>\n<ul>\n  <li><strong>22g High Quality Protein:</strong> 100% from whey source.</li>\n  <li><strong>Extra Amino Acid Matrix:</strong> L-Leucine, L-Glutamine, and Taurine.</li>\n  <li><strong>Digestive Enzymes:</strong> Papain and Bromelain for seamless absorption.</li>\n</ul>\n\n<h3>INGREDIENTS</h3>\n<p>Whey Protein Concentrate (Milk), Whey Protein Isolate (Milk), Taurine, Fat-reduced Cocoa Powder, L-Glutamine, L-Leucine, Bromelain, Papain, Sucralose.</p>\n\n<h3>NUTRITION FACTS</h3>\n<p>Serving Size: 1 Scoop (~30g) | Servings Per Container: Approx. 78</p>\n<ul>\n  <li>Calories: 112 kcal</li>\n  <li>Protein: 22g (44% DV)</li>\n  <li>Total Carbohydrates: 1.4g (0% DV)</li>\n  <li>Total Fat: 1.4g (2% DV)</li>\n</ul>\n\n<h3>HOW TO USE</h3>\n<p>Mix 1 scoop with 250ml water daily after training or in between meals.</p>\n\n<h3>FAQS</h3>\n<p><strong>Q: What enzymes are included?</strong><br/>A: Plant-based Bromelain and Papain for peak gastric comfort.</p>",
     "price": 10999,
     "discountPrice": 6819,
     "sku": "SCITEC-100WHEY-CHOC-2350G",
     "stock": 10,
     "lowStockAlert": 2,
     "images": [
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80"
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=1000&q=85"
     ],
     "status": "ACTIVE",
     "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
@@ -370,15 +372,15 @@
     "id": "nb-prod-010-projym-blend-choc",
     "title": "Pro JYM Ultra-Premium Protein Blend (Chocolate Mousse)",
     "slug": "pro-jym-ultra-premium-protein-blend-chocolate-mousse-4-4lb",
-    "description": "Precision-engineered protein blend featuring Whey Protein Isolate, Micellar Casein, Milk Protein Isolate, and Egg White Protein. 50 Servings Chocolate Mousse.",
+    "description": "<h3>DESCRIPTION</h3>\n<p>Formulated by fitness scientist Dr. Jim Stoppani. Pro JYM contains the precise ratio of Whey Protein Isolate (50%), Micellar Casein (40%), and Egg White Protein (10%) to optimize muscle protein synthesis for up to 6 continuous hours.</p>\n<h4>Key Highlights:</h4>\n<ul>\n  <li><strong>24g Tri-Phase Protein Blend:</strong> Fast, medium, and slow absorbing proteins.</li>\n  <li><strong>No Proprietary Blends:</strong> 100% transparent label listing exact protein sources.</li>\n  <li><strong>Zero Amino Spiking:</strong> Certified pure nitrogen protein content.</li>\n</ul>\n\n<h3>INGREDIENTS</h3>\n<p>Protein Blend (Whey Protein Isolate, Micellar Casein, Milk Protein Isolate, Egg White Protein), Dutch Processed Cocoa, Natural Flavors, Cellulose Gum, Xanthan Gum, Sucralose.</p>\n\n<h3>NUTRITION FACTS</h3>\n<p>Serving Size: 1 Scoop (~35g) | Servings Per Container: Approx. 45</p>\n<ul>\n  <li>Calories: 140 kcal</li>\n  <li>Protein: 24g (48% DV)</li>\n  <li>Total Carbohydrates: 4g (1% DV)</li>\n  <li>Total Fat: 2g (3% DV)</li>\n</ul>\n\n<h3>HOW TO USE</h3>\n<p>Mix 1 scoop in 180ml–350ml water or milk. Consume pre-workout, post-workout, or before sleep for extended anabolic support.</p>\n\n<h3>FAQS</h3>\n<p><strong>Q: Why is a blend better than whey isolate alone?</strong><br/>A: Casein and egg slow digestion, ensuring your muscles receive amino acids for up to 6 hours.</p>",
     "price": 10999,
     "discountPrice": 6819,
     "sku": "PROJYM-PROTEIN-CHOCMOUSSE-2KG",
     "stock": 10,
     "lowStockAlert": 2,
     "images": [
-      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=800&q=80"
+      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1000&q=85"
     ],
     "status": "ACTIVE",
     "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
@@ -405,15 +407,15 @@
     "id": "nb-prod-011-labrada-massgainer-choc",
     "title": "Labrada Nutrition Muscle Mass Gainer (Nutraceutical Chocolate)",
     "slug": "labrada-muscle-mass-gainer-chocolate-3kg",
-    "description": "High-calorie muscle mass gainer packed with 52g protein, 250g carbs, and 1240 calories per serving for serious muscle growth. 3kg Chocolate.",
+    "description": "<h3>DESCRIPTION</h3>\n<p>Labrada Muscle Mass Gainer was created by IFBB Pro Lee Labrada to help hard-gainers pack on solid muscle mass fast. Delivers a massive <strong>52g of muscle building protein</strong> and <strong>1,240 calories</strong> when mixed with whole milk.</p>\n<h4>Key Highlights:</h4>\n<ul>\n  <li><strong>52g Protein Matrix:</strong> Concentrated whey and casein proteins.</li>\n  <li><strong>1,240 Calories & 250g Carbs:</strong> High-density energy for rapid bulking.</li>\n  <li><strong>Enriched with 1g Creatine & 8.4g BCAAs:</strong> Maximum strength and recovery.</li>\n  <li><strong>Delicious Milk Chocolate Taste:</strong> Smooth texture with zero chalkiness.</li>\n</ul>\n\n<h3>INGREDIENTS</h3>\n<p>Cross Flow Ultra-Microfiltered Whey Concentrate, Calcium Caseinate, Maltodextrin, Fructose, Cocoa, Creatine Monohydrate, L-Glutamine, Vitamin & Mineral Premix, Sucralose.</p>\n\n<h3>NUTRITION FACTS</h3>\n<p>Serving Size: 9 Scoops (341g) with milk | Servings Per Container: Approx. 9</p>\n<ul>\n  <li>Calories: 1,240 kcal</li>\n  <li>Protein: 52g (104% DV)</li>\n  <li>Total Carbohydrates: 250g (91% DV)</li>\n  <li>Total Fat: 4.5g (6% DV)</li>\n  <li>Creatine Monohydrate: 1,000mg</li>\n</ul>\n\n<h3>HOW TO USE</h3>\n<p>Mix 3 scoops twice daily in 450-500ml cold whole milk or water. Take 1 serving in the morning and 1 serving immediately after training.</p>\n\n<h3>FAQS</h3>\n<p><strong>Q: Who is Labrada Mass Gainer ideal for?</strong><br/>A: Hard-gainers and athletes who struggle to consume enough daily calories to gain muscle weight.</p>",
     "price": 4199,
     "discountPrice": 3527,
     "sku": "LABRADA-MASSGAINER-CHOC-3KG",
     "stock": 10,
     "lowStockAlert": 2,
     "images": [
-      "https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80"
+      "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1593095940071-007d80173876?auto=format&fit=crop&w=1000&q=85"
     ],
     "status": "ACTIVE",
     "categoryId": "8f3b145a-6e21-4d98-b805-4f28329621b1",
