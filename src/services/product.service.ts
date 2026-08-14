@@ -236,8 +236,23 @@ export class ProductService {
       };
     });
 
+    const reviewAgg = await prisma.productReview.aggregate({
+      where: { productId: product.id, status: 'APPROVED' },
+      _avg: { rating: true },
+      _count: { id: true },
+    });
+
+    const averageRating = reviewAgg._avg.rating 
+      ? Number(reviewAgg._avg.rating.toFixed(1)) 
+      : product.averageRating || 0;
+    const reviewCount = reviewAgg._count.id > 0 
+      ? reviewAgg._count.id 
+      : product.reviewCount || 0;
+
     return {
       ...product,
+      averageRating,
+      reviewCount,
       price: basePrice,
       discountPrice: calculatedDiscountPrice,
       salePrice: calculatedDiscountPrice,
