@@ -503,4 +503,495 @@ export class ProductService {
       lowStockItems,
     };
   }
+
+  static async bulkUploadProducts(rawProducts: any[]) {
+    if (!Array.isArray(rawProducts) || rawProducts.length === 0) {
+      throw createError(400, 'Invalid payload: Array of products is required');
+    }
+
+    const categories = await prisma.productCategory.findMany({
+      include: { subcategories: true }
+    });
+    const brands = await prisma.productBrand.findMany();
+
+    const results = {
+      total: rawProducts.length,
+      created: 0,
+      updated: 0,
+      variantsCreated: 0,
+      variantsUpdated: 0,
+      failed: 0,
+      errors: [] as Array<{ row: number; title?: string; sku?: string; error: string }>
+    };
+
+    // Cache of products created/seen in this batch to allow instant parent-child variant linking
+    const batchProductMap = new Map<string, any>(); // key: sku or slug or title lowercase
+
+    for (let index = 0; index < rawProducts.length; index++) {
+      const row = rawProducts[index];
+      const rowNum = index + 1;
+
+      try {
+        const parentSku = (row.parentSku || row.ParentSKU || row.parent_sku || row['Parent SKU'] || row['Parent Product SKU'] || '').toString().trim();
+        const flavor = (row.flavor || row.Flavor || row['Flavor / Shade'] || '').toString().trim() || null;
+        const weight = (row.weight || row.Weight || row['Weight / Size'] || '').toString().trim() || null;
+        const isDefaultVariant = (row.isDefault || row.IsDefault || row['Is Default'] || '').toString().trim().toUpperCase() === 'TRUE';
+
+        // -------------------------------------------------------------
+        // CASE 1: Explicit Variant Row Linked via ParentSKU
+        // -------------------------------------------------------------
+        if (parentSku) {
+          let parentProduct = batchProductMap.get(parentSku.toLowerCase());
+          if (!parentProduct) {
+            parentProduct = await prisma.product.findUnique({
+              where: { sku: parentSku }
+            });
+          }
+
+          if (!parentProduct) {
+            throw new Error(`Parent product with SKU "${parentSku}" not found. Ensure parent product is listed before its variants or exists in database.`);
+          }
+
+          const variantSku = (row.sku || row.SKU || row['Sku'] || '').toString().trim() || 
+            `${parentProduct.sku}-${(flavor || '').replace(/[^a-z0-9]/gi, '')}-${(weight || '').replace(/[^a-z0-9]/gi, '')}`.toUpperCase();
+          
+          const variantTitle = (row.variantTitle || row.Title || row.title || `${parentProduct.title} - ${[flavor, weight].filter(Boolean).join(' ')}`).toString().trim();
+          const variantUnitPrice = parseFloat(row.unitPrice || row.UnitPrice || row.price || row.Price || row['Unit Price'] || parentProduct.unitPrice.toString());
+          const variantDiscount = parseFloat(row.discountPercentage || row.DiscountPercentage || row.discount || '0') || 0;
+          const variantGst = parseFloat(row.gst || row.GST || parentProduct.gst.toString()) || 18;
+          const variantStock = parseInt(row.stock || row.Stock || row.quantity || '0', 10) || 0;
+
+          let variantImages: string[] = [];
+          const rawVariantImages = row.images || row.Images || row['Image URLs'] || row.image;
+          if (Array.isArray(rawVariantImages)) {
+            variantImages = rawVariantImages.map((img: any) => String(img).trim()).filter(Boolean);
+          } else if (typeof rawVariantImages === 'string') {
+            variantImages = rawVariantImages.split(/[\n,;]+/).map((img: string) => img.trim()).filter(Boolean);
+          }
+          if (variantImages.length === 0) {
+            variantImages = parentProduct.images || [];
+          }
+
+          // Check if variant with this SKU exists
+          const existingVariant = await prisma.productVariant.findUnique({
+            where: { sku: variantSku }
+          });
+
+          if (existingVariant) {
+            await prisma.productVariant.update({
+              where: { id: existingVariant.id },
+              data: {
+                productId: parentProduct.id,
+                title: variantTitle,
+                flavor,
+                weight,
+                unitPrice: variantUnitPrice,
+                discountPercentage: variantDiscount,
+                gst: variantGst,
+                stock: variantStock,
+                images: variantImages,
+                isDefault: isDefaultVariant,
+              }
+            });
+            results.variantsUpdated++;
+          } else {
+            await prisma.productVariant.create({
+              data: {
+                productId: parentProduct.id,
+                title: variantTitle,
+                sku: variantSku,
+                flavor,
+                weight,
+                unitPrice: variantUnitPrice,
+                discountPercentage: variantDiscount,
+                gst: variantGst,
+                stock: variantStock,
+                images: variantImages,
+                isDefault: isDefaultVariant,
+              }
+            });
+            results.variantsCreated++;
+          }
+
+          continue;
+        }
+
+        // -------------------------------------------------------------
+        // CASE 2: Parent Product Row (With optional embedded variant)
+        // -------------------------------------------------------------
+        const title = (row.title || row.Title || row['Product Title'] || '').toString().trim();
+        if (!title) {
+          throw new Error('Product title is required');
+        }
+
+        const skuRaw = (row.sku || row.SKU || row['Sku'] || '').toString().trim();
+        const baseSlug = title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+        
+        const sku = skuRaw || (baseSlug.substring(0, 20).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase());
+
+        const unitPrice = parseFloat(row.unitPrice || row.UnitPrice || row.price || row.Price || row['Unit Price'] || '0');
+        if (isNaN(unitPrice) || unitPrice < 0) {
+          throw new Error('Valid unitPrice is required (>= 0)');
+        }
+
+        const discountPercentage = parseFloat(row.discountPercentage || row.DiscountPercentage || row.discount || row['Discount %'] || '0') || 0;
+        const gst = parseFloat(row.gst || row.GST || row['GST %'] || '18') || 18;
+        const stock = parseInt(row.stock || row.Stock || row.quantity || row.Quantity || '0', 10) || 0;
+        const lowStockAlert = parseInt(row.lowStockAlert || row.LowStockAlert || row['Low Stock Alert'] || '5', 10) || 5;
+
+        // Preference enum
+        const prefRaw = (row.preference || row.Preference || '').toString().trim().toUpperCase().replace(/[-\s]/g, '_');
+        let preference: any = 'NOT_APPLICABLE';
+        if (['VEGETARIAN', 'NON_VEGETARIAN', 'EGGITARIAN', 'VEGAN', 'NOT_APPLICABLE'].includes(prefRaw)) {
+          preference = prefRaw;
+        }
+
+        // Status enum
+        const statusRaw = (row.status || row.Status || '').toString().trim().toUpperCase().replace(/[-\s]/g, '_');
+        let status: any = 'ACTIVE';
+        if (['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK'].includes(statusRaw)) {
+          status = statusRaw;
+        } else if (stock === 0) {
+          status = 'OUT_OF_STOCK';
+        }
+
+        // Expiry Date
+        let expiryDate: Date | null = null;
+        if (row.expiryDate || row.ExpiryDate || row['Expiry Date']) {
+          const parsedDate = new Date(row.expiryDate || row.ExpiryDate || row['Expiry Date']);
+          if (!isNaN(parsedDate.getTime())) {
+            expiryDate = parsedDate;
+          }
+        }
+
+        // Brand matching or creation
+        const brandName = (row.brandName || row.brand || row.Brand || row['Brand Name'] || '').toString().trim();
+        let brandId: string | null = null;
+        if (brandName) {
+          let matchedBrand = brands.find(
+            b => b.name.toLowerCase() === brandName.toLowerCase() || b.slug.toLowerCase() === brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+          );
+
+          if (!matchedBrand) {
+            const newBrandSlug = brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            matchedBrand = await prisma.productBrand.create({
+              data: {
+                name: brandName,
+                slug: newBrandSlug + '-' + Math.random().toString(36).substring(2, 6),
+                status: 'ACTIVE'
+              }
+            });
+            brands.push(matchedBrand);
+          }
+          brandId = matchedBrand.id;
+        }
+
+        // Category & Subcategory matching
+        const catName = (row.categoryName || row.category || row.Category || row['Category Name'] || '').toString().trim();
+        const subcatName = (row.subcategoryName || row.subcategory || row.Subcategory || row['Subcategory Name'] || '').toString().trim();
+        let categoryId: string | null = null;
+        let subcategoryId: string | null = null;
+
+        if (catName) {
+          const matchedCategory = categories.find(
+            c => c.name.toLowerCase() === catName.toLowerCase() || c.slug.toLowerCase() === catName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+          );
+
+          if (matchedCategory) {
+            categoryId = matchedCategory.id;
+
+            if (subcatName && matchedCategory.subcategories?.length > 0) {
+              const matchedSub = matchedCategory.subcategories.find(
+                s => s.name.toLowerCase() === subcatName.toLowerCase() || s.slug.toLowerCase() === subcatName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+              );
+              if (matchedSub) {
+                subcategoryId = matchedSub.id;
+              }
+            }
+          }
+        }
+
+        // Images parsing
+        let images: string[] = [];
+        const rawImages = row.images || row.Images || row['Image URLs'] || row.image || row.Image;
+        if (Array.isArray(rawImages)) {
+          images = rawImages.map((img: any) => String(img).trim()).filter(Boolean);
+        } else if (typeof rawImages === 'string') {
+          images = rawImages.split(/[\n,;]+/).map((img: string) => img.trim()).filter(Boolean);
+        }
+
+        if (images.length === 0) {
+          images = ['https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80'];
+        }
+
+        const description = (row.description || row.Description || '').toString().trim() || null;
+
+        // Check if product with this SKU already exists
+        let product = await prisma.product.findUnique({
+          where: { sku }
+        });
+
+        if (product) {
+          product = await prisma.product.update({
+            where: { id: product.id },
+            data: {
+              title,
+              description,
+              brandId,
+              preference,
+              unitPrice,
+              discountPercentage,
+              gst,
+              expiryDate,
+              stock,
+              lowStockAlert,
+              images,
+              status,
+              categoryId,
+              subcategoryId,
+            }
+          });
+          results.updated++;
+        } else {
+          // Generate unique slug
+          let slug = baseSlug;
+          let counter = 1;
+          while (await prisma.product.findUnique({ where: { slug } })) {
+            slug = `${baseSlug}-${counter}`;
+            counter++;
+          }
+
+          product = await prisma.product.create({
+            data: {
+              title,
+              slug,
+              description,
+              brandId,
+              preference,
+              unitPrice,
+              discountPercentage,
+              gst,
+              expiryDate,
+              sku,
+              stock,
+              lowStockAlert,
+              images,
+              status,
+              categoryId,
+              subcategoryId,
+            }
+          });
+          results.created++;
+        }
+
+        // Cache in batch map for succeeding variant rows
+        batchProductMap.set(sku.toLowerCase(), product);
+
+        // If this product row also specified Flavor or Weight, auto-create its initial variant
+        if (flavor || weight) {
+          const varSku = `${sku}-VAR-1`;
+          const existingVar = await prisma.productVariant.findFirst({
+            where: {
+              productId: product.id,
+              OR: [{ sku: varSku }, { flavor, weight }]
+            }
+          });
+
+          if (!existingVar) {
+            await prisma.productVariant.create({
+              data: {
+                productId: product.id,
+                title: `${product.title} - ${[flavor, weight].filter(Boolean).join(' ')}`,
+                sku: varSku,
+                flavor,
+                weight,
+                unitPrice,
+                discountPercentage,
+                gst,
+                stock,
+                images,
+                isDefault: true,
+              }
+            });
+            results.variantsCreated++;
+          }
+        }
+      } catch (err: any) {
+        results.failed++;
+        results.errors.push({
+          row: rowNum,
+          title: row.title || row.Title,
+          sku: row.sku || row.SKU,
+          error: err.message || 'Unknown processing error'
+        });
+      }
+    }
+
+    return results;
+  }
+
+  static async exportProductsForExcel(query: any = {}) {
+    const products = await prisma.product.findMany({
+      include: {
+        brand: true,
+        category: true,
+        subcategory: true,
+        variants: true,
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const exportRows: any[] = [];
+
+    for (const p of products) {
+      // Main Product Row
+      exportRows.push({
+        Title: p.title,
+        SKU: p.sku,
+        ParentSKU: '',
+        Brand: p.brand?.name || '',
+        Category: p.category?.name || '',
+        Subcategory: p.subcategory?.name || '',
+        Flavor: '',
+        Weight: '',
+        UnitPrice: p.unitPrice,
+        DiscountPercentage: p.discountPercentage || 0,
+        GST: p.gst,
+        Stock: p.stock,
+        LowStockAlert: p.lowStockAlert,
+        Preference: p.preference || 'NOT_APPLICABLE',
+        Status: p.status,
+        IsDefault: '',
+        Description: p.description || '',
+        Images: (p.images || []).join(', '),
+        ExpiryDate: p.expiryDate ? p.expiryDate.toISOString().split('T')[0] : '',
+      });
+
+      // Variant Rows (if any)
+      if (p.variants && p.variants.length > 0) {
+        for (const v of p.variants) {
+          exportRows.push({
+            Title: v.title,
+            SKU: v.sku,
+            ParentSKU: p.sku,
+            Brand: p.brand?.name || '',
+            Category: p.category?.name || '',
+            Subcategory: p.subcategory?.name || '',
+            Flavor: v.flavor || '',
+            Weight: v.weight || '',
+            UnitPrice: v.unitPrice,
+            DiscountPercentage: v.discountPercentage || 0,
+            GST: v.gst,
+            Stock: v.stock,
+            LowStockAlert: p.lowStockAlert,
+            Preference: p.preference || 'NOT_APPLICABLE',
+            Status: p.status,
+            IsDefault: v.isDefault ? 'TRUE' : 'FALSE',
+            Description: '',
+            Images: (v.images || []).join(', '),
+            ExpiryDate: p.expiryDate ? p.expiryDate.toISOString().split('T')[0] : '',
+          });
+        }
+      }
+    }
+
+    return exportRows;
+  }
+
+  static getSampleTemplateData() {
+    return [
+      // 1. Parent Product: ON Gold Standard Whey
+      {
+        Title: 'Optimum Nutrition Gold Standard 100% Whey',
+        SKU: 'ON-GSWHEY-MAIN',
+        ParentSKU: '',
+        Brand: 'Optimum Nutrition',
+        Category: 'Proteins & Fitness Supplements',
+        Subcategory: 'Whey Isolate & Concentrates',
+        Flavor: '',
+        Weight: '',
+        UnitPrice: 3899,
+        DiscountPercentage: 15,
+        GST: 18,
+        Stock: 80,
+        LowStockAlert: 5,
+        Preference: 'VEGETARIAN',
+        Status: 'ACTIVE',
+        IsDefault: '',
+        Description: 'World #1 Whey Protein with 24g premium protein and 5.5g naturally occurring BCAAs.',
+        Images: 'https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80',
+        ExpiryDate: '2027-12-31'
+      },
+      // Variant 1 of ON Whey
+      {
+        Title: 'Optimum Nutrition Gold Standard Whey - Double Rich Chocolate 2 lbs',
+        SKU: 'ON-GSWHEY-2LB-CHOC',
+        ParentSKU: 'ON-GSWHEY-MAIN',
+        Brand: 'Optimum Nutrition',
+        Category: 'Proteins & Fitness Supplements',
+        Subcategory: 'Whey Isolate & Concentrates',
+        Flavor: 'Double Rich Chocolate',
+        Weight: '2 lbs',
+        UnitPrice: 3899,
+        DiscountPercentage: 15,
+        GST: 18,
+        Stock: 45,
+        LowStockAlert: 5,
+        Preference: 'VEGETARIAN',
+        Status: 'ACTIVE',
+        IsDefault: 'TRUE',
+        Description: '',
+        Images: 'https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?auto=format&fit=crop&w=800&q=80',
+        ExpiryDate: '2027-12-31'
+      },
+      // Variant 2 of ON Whey
+      {
+        Title: 'Optimum Nutrition Gold Standard Whey - French Vanilla Cream 5 lbs',
+        SKU: 'ON-GSWHEY-5LB-VAN',
+        ParentSKU: 'ON-GSWHEY-MAIN',
+        Brand: 'Optimum Nutrition',
+        Category: 'Proteins & Fitness Supplements',
+        Subcategory: 'Whey Isolate & Concentrates',
+        Flavor: 'French Vanilla Cream',
+        Weight: '5 lbs',
+        UnitPrice: 7899,
+        DiscountPercentage: 20,
+        GST: 18,
+        Stock: 35,
+        LowStockAlert: 5,
+        Preference: 'VEGETARIAN',
+        Status: 'ACTIVE',
+        IsDefault: 'FALSE',
+        Description: '',
+        Images: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
+        ExpiryDate: '2027-12-31'
+      },
+      // 2. Standalone Skincare Product (No Variants)
+      {
+        Title: 'CeraVe Hydrating Facial Cleanser for Normal to Dry Skin 473ml',
+        SKU: 'CERAVE-CLEANSER-473ML',
+        ParentSKU: '',
+        Brand: 'CeraVe',
+        Category: 'Skincare & Facial Care',
+        Subcategory: 'Face Serums & Glow Elixirs',
+        Flavor: '',
+        Weight: '473 ml',
+        UnitPrice: 1250,
+        DiscountPercentage: 10,
+        GST: 18,
+        Stock: 30,
+        LowStockAlert: 5,
+        Preference: 'NOT_APPLICABLE',
+        Status: 'ACTIVE',
+        IsDefault: 'TRUE',
+        Description: 'Gentle foaming cleanser with 3 essential ceramides and hyaluronic acid for lasting barrier hydration.',
+        Images: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80',
+        ExpiryDate: '2028-06-30'
+      }
+    ];
+  }
 }
+
