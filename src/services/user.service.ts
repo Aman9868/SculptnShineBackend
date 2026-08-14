@@ -13,11 +13,38 @@ export class UserService {
       where.role = role === 'Administrators' ? 'ADMIN' : 'USER';
     }
     
-    if (search) {
+    if (search && search.trim()) {
+      const trimmedSearch = search.trim();
+      const digitsOnly = trimmedSearch.replace(/\D/g, '');
+      
+      const phoneQueries: any[] = [
+        { profile: { phone: { contains: trimmedSearch, mode: 'insensitive' } } }
+      ];
+
+      if (digitsOnly.length >= 3) {
+        phoneQueries.push({ profile: { phone: { contains: digitsOnly, mode: 'insensitive' } } });
+        
+        // If has 91 prefix and length > 10, strip 91
+        const without91 = (digitsOnly.startsWith('91') && digitsOnly.length > 10) ? digitsOnly.slice(2) : digitsOnly;
+        if (without91 !== digitsOnly) {
+          phoneQueries.push({ profile: { phone: { contains: without91, mode: 'insensitive' } } });
+        }
+
+        // Handle formatted variations like "98765 43210" or "+91 98765 43210"
+        if (without91.length === 10) {
+          const split5 = `${without91.slice(0, 5)} ${without91.slice(5)}`;
+          phoneQueries.push({ profile: { phone: { contains: split5, mode: 'insensitive' } } });
+          phoneQueries.push({ profile: { phone: { contains: `+91 ${split5}`, mode: 'insensitive' } } });
+          phoneQueries.push({ profile: { phone: { contains: `+91${without91}`, mode: 'insensitive' } } });
+          phoneQueries.push({ profile: { phone: { contains: `+91 ${without91}`, mode: 'insensitive' } } });
+        }
+      }
+
       where.OR = [
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
+        { firstName: { contains: trimmedSearch, mode: 'insensitive' } },
+        { lastName: { contains: trimmedSearch, mode: 'insensitive' } },
+        { email: { contains: trimmedSearch, mode: 'insensitive' } },
+        ...phoneQueries,
       ];
     }
 
@@ -88,10 +115,11 @@ export class UserService {
 
   static async exportUsers() {
     const users = await prisma.user.findMany({
+      include: { profile: { select: { phone: true } } },
       orderBy: { createdAt: 'desc' },
     });
 
-    const fields = ['ID', 'First Name', 'Last Name', 'Email', 'Role', 'Status', 'Created At'];
+    const fields = ['ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Role', 'Status', 'Created At'];
     const csvRows = [fields.join(',')];
 
     for (const u of users) {
@@ -100,6 +128,7 @@ export class UserService {
         `"${u.firstName.replace(/"/g, '""')}"`,
         `"${u.lastName.replace(/"/g, '""')}"`,
         u.email,
+        u.profile?.phone || '',
         u.role,
         u.status,
         u.createdAt.toISOString()
@@ -125,11 +154,40 @@ export class UserService {
         updatedAt: true,
         profile: {
           include: {
-            addresses: true,
-            orders: true,
-            cart: true,
-          }
-        }
+            addresses: {
+              orderBy: { createdAt: 'desc' },
+            },
+            orders: {
+              include: {
+                items: {
+                  include: {
+                    product: {
+                      select: {
+                        id: true,
+                        title: true,
+                        images: true,
+                        sku: true,
+                      },
+                    },
+                    variant: true,
+                  },
+                },
+                payments: true,
+              },
+              orderBy: { createdAt: 'desc' },
+            },
+            cart: {
+              include: {
+                items: {
+                  include: {
+                    product: true,
+                    variant: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
