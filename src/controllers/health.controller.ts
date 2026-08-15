@@ -7,7 +7,7 @@ let dynamicMaintenanceMode: {
   estimatedEndTime?: string | null;
 } = {
   enabled: process.env.MAINTENANCE_MODE === 'true',
-  message: process.env.MAINTENANCE_MESSAGE || 'Sculpt & Shine systems are undergoing scheduled maintenance. We will be back shortly.',
+  message: process.env.MAINTENANCE_MESSAGE || 'Sculpt N Shine systems are undergoing scheduled maintenance. We will be back shortly.',
   estimatedEndTime: null,
 };
 

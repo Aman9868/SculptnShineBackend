@@ -16,7 +16,7 @@ export class EmailConfigService {
           secure: true,
           user: '',
           password: '',
-          fromName: 'Sculpt & Shine',
+          fromName: 'Sculpt N Shine',
           fromEmail: '',
           isEnabled: false,
         },
@@ -69,7 +69,7 @@ export class EmailConfigService {
         data: {
           ...updateData,
           password: data.password || '',
-          fromName: data.fromName || 'Sculpt & Shine',
+          fromName: data.fromName || 'Sculpt N Shine',
           fromEmail: data.fromEmail || data.user,
         },
       });

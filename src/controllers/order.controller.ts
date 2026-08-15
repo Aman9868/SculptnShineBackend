@@ -108,7 +108,7 @@ export class OrderController {
       const order = await OrderService.getOrderById(req.params.id as string, userId, isAdmin);
 
       const businessConfig = await prisma.businessConfig.findFirst() || {
-        brandName: 'Sculpt & Shine',
+        brandName: 'Sculpt N Shine',
         address: '123 Wellness Ave',
         supportPhone: '+91 98765 43210',
         supportEmail: 'support@sculptnshine.com',
@@ -370,7 +370,7 @@ export class OrderController {
           <div class="help-section">
             <div class="thank-you">
               <div class="thank-you-text">
-                <h4>Thank you for shopping with Sculpt & Shine!</h4>
+                <h4>Thank you for shopping with Sculpt N Shine!</h4>
                 <p>We appreciate your trust in us. If you have any questions about this invoice, please contact our support team.</p>
               </div>
             </div>
@@ -384,7 +384,7 @@ export class OrderController {
 
 
           <div style="text-align: center; margin-top: 10px; font-size: 9px; color: #888;">
-            <p style="margin: 0;">© ${new Date().getFullYear()} Sculpt & Shine. All Rights Reserved.</p>
+            <p style="margin: 0;">© ${new Date().getFullYear()} Sculpt N Shine. All Rights Reserved.</p>
           </div>
         </body>
         </html>
