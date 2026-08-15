@@ -1,0 +1,291 @@
+import makeWASocket, {
+  DisconnectReason,
+  useMultiFileAuthState,
+  WASocket,
+  fetchLatestBaileysVersion,
+  proto,
+} from '@whiskeysockets/baileys';
+import pino from 'pino';
+import QRCode from 'qrcode';
+import path from 'path';
+import fs from 'fs';
+import { Boom } from '@hapi/boom';
+
+export type WhatsAppConnectionStatus = 'DISCONNECTED' | 'CONNECTING' | 'SCAN_QR' | 'CONNECTED';
+
+export interface WhatsAppConnectedInfo {
+  phone: string | null;
+  name: string | null;
+  jid: string | null;
+  platform?: string;
+}
+
+export class WhatsAppSessionService {
+  private static socket: WASocket | null = null;
+  private static status: WhatsAppConnectionStatus = 'DISCONNECTED';
+  private static qrCodeString: string | null = null;
+  private static qrCodeDataUrl: string | null = null;
+  private static connectedInfo: WhatsAppConnectedInfo | null = null;
+  private static lastConnectedAt: Date | null = null;
+  private static isInitializing: boolean = false;
+  private static reconnectAttempts: number = 0;
+  private static maxReconnectAttempts: number = 10;
+  private static authDir: string = path.join(process.cwd(), 'storage', 'whatsapp_auth');
+  private static isAutomationEnabled: boolean = true;
+
+  /**
+   * Initializes the WhatsApp Baileys multi-device socket
+   */
+  static async init() {
+    if (this.isInitializing || (this.socket && this.status === 'CONNECTED')) {
+      return;
+    }
+
+    this.isInitializing = true;
+    this.status = 'CONNECTING';
+
+    try {
+      if (!fs.existsSync(this.authDir)) {
+        fs.mkdirSync(this.authDir, { recursive: true });
+      }
+
+      const { state, saveCreds } = await useMultiFileAuthState(this.authDir);
+      const { version, isLatest } = await fetchLatestBaileysVersion().catch(() => ({
+        version: [2, 3000, 1015901307] as [number, number, number],
+        isLatest: true,
+      }));
+
+      const logger = pino({ level: 'silent' });
+
+      this.socket = makeWASocket({
+        version,
+        logger,
+        printQRInTerminal: false,
+        auth: state,
+        browser: ['Sculpt & Shine Admin', 'Chrome', '1.0.0'],
+        syncFullHistory: false,
+        generateHighQualityLinkPreview: true,
+      });
+
+      // Save credentials on updates
+      this.socket.ev.on('creds.update', saveCreds);
+
+      // Connection update handler
+      this.socket.ev.on('connection.update', async (update) => {
+        const { connection, lastDisconnect, qr } = update;
+
+        if (qr) {
+          this.qrCodeString = qr;
+          try {
+            this.qrCodeDataUrl = await QRCode.toDataURL(qr, {
+              margin: 2,
+              width: 320,
+              color: {
+                dark: '#000000',
+                light: '#ffffff',
+              },
+            });
+            this.status = 'SCAN_QR';
+          } catch (err) {
+            console.error('[WhatsApp] Failed to generate QR data URL:', err);
+          }
+        }
+
+        if (connection === 'close') {
+          const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
+          const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+          this.status = 'DISCONNECTED';
+          this.qrCodeString = null;
+          this.qrCodeDataUrl = null;
+
+          if (shouldReconnect) {
+            if (this.reconnectAttempts < this.maxReconnectAttempts) {
+              this.reconnectAttempts++;
+              const delay = Math.min(5000 * this.reconnectAttempts, 30000);
+              console.log(`[WhatsApp] Connection closed. Reconnecting in ${delay / 1000}s (Attempt ${this.reconnectAttempts})...`);
+              setTimeout(() => {
+                this.isInitializing = false;
+                this.init();
+              }, delay);
+            } else {
+              console.warn('[WhatsApp] Max reconnect attempts reached. Waiting for admin manual reconnect.');
+            }
+          } else {
+            console.log('[WhatsApp] Logged out. Resetting auth state.');
+            await this.clearAuthState();
+            this.isInitializing = false;
+            this.status = 'DISCONNECTED';
+          }
+        } else if (connection === 'open') {
+          console.log('✅ [WhatsApp] Direct Multi-Device Session Connected successfully!');
+          this.status = 'CONNECTED';
+          this.qrCodeString = null;
+          this.qrCodeDataUrl = null;
+          this.reconnectAttempts = 0;
+          this.lastConnectedAt = new Date();
+
+          const userJid = this.socket?.user?.id || '';
+          const phone = userJid.split(':')[0].replace(/@.*/, '');
+          const name = this.socket?.user?.name || this.socket?.user?.notify || 'Store Administrator';
+
+          this.connectedInfo = {
+            phone: phone ? `+${phone}` : 'Connected Account',
+            name,
+            jid: userJid,
+            platform: 'WhatsApp Multi-Device',
+          };
+        }
+      });
+    } catch (error) {
+      console.error('[WhatsApp] Error initializing WhatsApp socket:', error);
+      this.status = 'DISCONNECTED';
+    } finally {
+      this.isInitializing = false;
+    }
+  }
+
+  /**
+   * Clears saved authentication files from disk
+   */
+  private static async clearAuthState() {
+    try {
+      if (fs.existsSync(this.authDir)) {
+        fs.rmSync(this.authDir, { recursive: true, force: true });
+        fs.mkdirSync(this.authDir, { recursive: true });
+      }
+      this.connectedInfo = null;
+      this.lastConnectedAt = null;
+    } catch (err) {
+      console.error('[WhatsApp] Failed to clear auth state folder:', err);
+    }
+  }
+
+  /**
+   * Get current session status & QR code
+   */
+  static getStatus() {
+    return {
+      status: this.status,
+      connectedUser: this.connectedInfo,
+      lastConnectedAt: this.lastConnectedAt,
+      qrCode: this.qrCodeDataUrl,
+      isConfigured: this.status === 'CONNECTED',
+      isAutomationEnabled: this.isAutomationEnabled,
+    };
+  }
+
+  /**
+   * Toggle automated customer notifications on or off
+   */
+  static toggleAutomation(enabled: boolean) {
+    this.isAutomationEnabled = enabled;
+    return {
+      success: true,
+      isAutomationEnabled: this.isAutomationEnabled,
+      message: `Automated WhatsApp notifications ${enabled ? 'enabled' : 'paused'}.`,
+    };
+  }
+
+  /**
+   * Explicitly triggers QR regeneration / re-initialization
+   */
+  static async requestQR() {
+    if (this.status === 'CONNECTED') {
+      return this.getStatus();
+    }
+
+    if (!this.socket || this.status === 'DISCONNECTED') {
+      this.isInitializing = false;
+      await this.init();
+    }
+
+    return this.getStatus();
+  }
+
+  /**
+   * Disconnects / unlinks current WhatsApp session
+   */
+  static async disconnect() {
+    try {
+      if (this.socket) {
+        await this.socket.logout().catch(() => {});
+        this.socket.end(new Error('Admin disconnected session'));
+        this.socket = null;
+      }
+    } catch (err) {
+      console.error('[WhatsApp] Error logging out socket:', err);
+    }
+
+    await this.clearAuthState();
+    this.status = 'DISCONNECTED';
+    this.qrCodeString = null;
+    this.qrCodeDataUrl = null;
+    this.connectedInfo = null;
+    this.isInitializing = false;
+
+    // Immediately restart to generate fresh QR code for pairing
+    setTimeout(() => this.init(), 1000);
+
+    return { success: true, message: 'WhatsApp session disconnected. New QR code generating.' };
+  }
+
+  /**
+   * Normalizes phone number to standard international WhatsApp JID format
+   */
+  static normalizePhoneNumber(to: string): string | null {
+    let digits = to.replace(/\D/g, '');
+    if (!digits) return null;
+
+    // If 10-digit Indian number without country code, prefix with 91
+    if (digits.length === 10) {
+      digits = `91${digits}`;
+    }
+
+    return `${digits}@s.whatsapp.net`;
+  }
+
+  /**
+   * Sends a message via the active WhatsApp multi-device session
+   */
+  static async sendMessage(to: string, message: string, force = false) {
+    if (!force && !this.isAutomationEnabled) {
+      console.log('[WhatsApp] Automated notifications are currently paused by Admin.');
+      return { sent: false, skipped: true, reason: 'AUTOMATION_PAUSED' };
+    }
+
+    if (this.status !== 'CONNECTED' || !this.socket) {
+      console.warn('[WhatsApp] Cannot send message: WhatsApp account is not connected.');
+      return { sent: false, skipped: true, reason: 'WHATSAPP_NOT_CONNECTED' };
+    }
+
+    const recipientJid = this.normalizePhoneNumber(to);
+    if (!recipientJid) {
+      console.warn(`[WhatsApp] Invalid phone number provided: "${to}"`);
+      return { sent: false, skipped: true, reason: 'INVALID_PHONE_NUMBER' };
+    }
+
+    try {
+      const sentMessage = await this.socket.sendMessage(recipientJid, {
+        text: message,
+      });
+
+      return {
+        sent: true,
+        messageId: sentMessage?.key?.id,
+        recipient: recipientJid,
+      };
+    } catch (error: any) {
+      console.error(`[WhatsApp] Failed to send message to ${recipientJid}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Sends a test message
+   */
+  static async sendTestMessage(to: string, customMessage?: string) {
+    const text = customMessage || `🔔 *Sculpt & Shine Verification*\n\nThis is a test notification from your connected Sculpt & Shine store WhatsApp engine.\n\nTime: ${new Date().toLocaleString('en-IN')}\nStatus: System Operational ✅`;
+    return await this.sendMessage(to, text);
+  }
+}

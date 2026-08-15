@@ -76,4 +76,18 @@ export class AuthController {
       next(error);
     }
   }
+
+  static async deleteAccount(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
+
+      const result = await AuthService.deleteAccount(userId);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

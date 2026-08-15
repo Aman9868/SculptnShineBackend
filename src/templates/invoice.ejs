@@ -184,6 +184,12 @@
         <td class="text-right">₹<%= Number(order.shippingAmount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }) %></td>
       </tr>
       <% } %>
+      <% if ((order.couponDiscount && order.couponDiscount > 0) || (order.discountAmount && order.discountAmount > 0)) { %>
+      <tr style="color: #c05621; font-weight: 600;">
+        <td>Coupon Discount <%= order.couponCode ? '(' + order.couponCode + ')' : '' %></td>
+        <td class="text-right">- ₹<%= Number(order.couponDiscount || order.discountAmount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }) %></td>
+      </tr>
+      <% } %>
       <tr class="final-total">
         <td>Total Amount</td>
         <td class="text-right">₹<%= Number(order.totalAmount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }) %></td>
