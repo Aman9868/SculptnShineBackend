@@ -53,7 +53,7 @@ export class NotificationChannelService {
       },
     });
 
-    const fromName = config.fromName || 'Sculpt & Shine';
+    const fromName = config.fromName || 'Sculpt N Shine';
     const fromEmail = config.fromEmail || config.user;
     const from = `"${fromName}" <${fromEmail}>`;
     const actionUrl = getActionUrl(payload.link);

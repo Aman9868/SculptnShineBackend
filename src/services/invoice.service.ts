@@ -137,10 +137,10 @@ export class InvoiceService {
     });
 
     const info = await transporter.sendMail({
-      from: `"${config?.brandName || 'Sculpt & Shine'}" <no-reply@sculptnshine.com>`,
+      from: `"${config?.brandName || 'Sculpt N Shine'}" <no-reply@sculptnshine.com>`,
       to: userEmail,
       subject: `Your Invoice for Order ${order.orderNumber}`,
-      text: `Hi ${userName},\n\nThank you for your order! Please find attached the invoice for order ${order.orderNumber}.\n\nBest regards,\n${config?.brandName || 'Sculpt & Shine'}`,
+      text: `Hi ${userName},\n\nThank you for your order! Please find attached the invoice for order ${order.orderNumber}.\n\nBest regards,\n${config?.brandName || 'Sculpt N Shine'}`,
       attachments: [
         {
           filename: `Invoice-${order.orderNumber}.pdf`,

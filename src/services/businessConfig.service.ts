@@ -37,7 +37,7 @@ export class BusinessConfigService {
     } else {
       return await prisma.businessConfig.create({
         data: {
-          brandName: data.brandName || 'Sculpt & Shine',
+          brandName: data.brandName || 'Sculpt N Shine',
           address: data.address || '',
           gstNumber: data.gstNumber || '',
           supportEmail: data.supportEmail || null,
