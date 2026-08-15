@@ -117,4 +117,32 @@ export class NotificationService {
       data: { isRead: true },
     });
   }
+
+  static async notifyAdmins(
+    title: string,
+    message: string,
+    link?: string,
+    type: 'ORDER_UPDATE' | 'PROMO' | 'SYSTEM' = 'ORDER_UPDATE'
+  ) {
+    const adminUsers = await prisma.user.findMany({
+      where: { role: 'ADMIN' },
+      include: { profile: true },
+    });
+
+    const notifications = await Promise.all(
+      adminUsers.map(async (admin) => {
+        let profileId = admin.profile?.id;
+        if (!profileId) {
+          const newProfile = await prisma.userProfile.create({
+            data: { userId: admin.id },
+          });
+          profileId = newProfile.id;
+        }
+        return this.sendToUser(profileId, title, message, type, link);
+      })
+    );
+
+    return notifications;
+  }
 }
+

@@ -48,6 +48,7 @@ model UserProfile {
   reviews      ProductReview[]
   notifications Notification[]
   pushSubscriptions PushSubscription[]
+  couponUsages CouponUsage[]
 }
 
 enum Role {
@@ -276,12 +277,17 @@ model Order {
   trackingNumber  String?
   notes           String?
   invoiceUrl      String?
+  couponCode      String?
+  couponDiscount  Float           @default(0)
+  couponId        String?
+  coupon          Coupon?         @relation(fields: [couponId], references: [id], onDelete: SetNull)
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   items           OrderItem[]
   payments        Payment[]
   statusHistory   OrderStatusHistory[]
   supportTickets  SupportTicket[]
+  couponUsages    CouponUsage[]
 }
 
 model OrderStatusHistory {
@@ -407,6 +413,20 @@ model BusinessConfig {
   youtubeUrl             String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model EmailConfig {
+  id        String   @id @default(uuid())
+  host      String
+  port      Int
+  secure    Boolean  @default(true)
+  user      String
+  password  String
+  fromName  String?
+  fromEmail String?
+  isEnabled Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum PolicyType {
@@ -587,4 +607,61 @@ model PushSubscription {
   userAgent     String?
   createdAt     DateTime    @default(now())
 }
+
+enum CouponDiscountType {
+  PERCENTAGE
+  FLAT
+}
+
+enum CouponScopeType {
+  GENERAL
+  FIRST_ORDER
+  CATEGORY
+  BRAND
+  PRODUCT
+  SEASONAL
+}
+
+model Coupon {
+  id                    String             @id @default(uuid())
+  code                  String             @unique
+  title                 String
+  description           String?
+  discountType          CouponDiscountType @default(PERCENTAGE)
+  discountValue         Float
+  maxDiscountAmount     Float?
+  minOrderAmount        Float?             @default(0)
+  scopeType             CouponScopeType    @default(GENERAL)
+  applicableProductIds  String[]           @default([])
+  applicableCategoryIds String[]           @default([])
+  applicableBrandIds    String[]           @default([])
+  startDate             DateTime           @default(now())
+  endDate               DateTime
+  usageLimit            Int?
+  usageLimitPerUser     Int                @default(1)
+  usedCount             Int                @default(0)
+  isActive              Boolean            @default(true)
+  isPublic              Boolean            @default(true)
+  badgeText             String?
+  bannerText            String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  orders                Order[]
+  usages                CouponUsage[]
+}
+
+model CouponUsage {
+  id             String      @id @default(uuid())
+  couponId       String
+  coupon         Coupon      @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  userProfileId  String
+  userProfile    UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  orderId        String?
+  order          Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  discountAmount Float
+  createdAt      DateTime    @default(now())
+
+  @@index([couponId, userProfileId])
+}
+
 

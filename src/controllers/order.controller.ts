@@ -44,8 +44,10 @@ export class OrderController {
       const limit = parseInt(req.query.limit as string) || 10;
       const status = req.query.status as string | undefined;
       const search = req.query.search as string | undefined;
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
 
-      const result = await OrderService.getAdminOrders(page, limit, status, search);
+      const result = await OrderService.getAdminOrders(page, limit, status, search, startDate, endDate);
       res.status(200).json({
         success: true,
         message: 'Admin orders fetched successfully',
@@ -335,10 +337,17 @@ export class OrderController {
                 <span>Shipping Charges</span>
                 <span>₹${order.shippingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
+              ${((order as any).couponDiscount && (order as any).couponDiscount > 0) || ((order as any).discountAmount && (order as any).discountAmount > 0) ? `
+              <div class="totals-row" style="color: #c05621; font-weight: 600;">
+                <span>Coupon Discount ${(order as any).couponCode ? `(${(order as any).couponCode})` : ''}</span>
+                <span>- ₹${((order as any).couponDiscount || (order as any).discountAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              </div>
+              ` : `
               <div class="totals-row">
                 <span>Discount</span>
-                <span>- ₹${((order as any).discountAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <span>- ₹0.00</span>
               </div>
+              `}
               <div class="totals-row grand">
                 <span>TOTAL</span>
                 <span>₹${order.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>

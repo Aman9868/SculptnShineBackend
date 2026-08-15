@@ -30,12 +30,12 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 
     const secret = getAccessTokenSecret(unverifiedPayload.role);
     const decoded = jwt.verify(token, secret) as DecodedAccessToken;
-    
+
     // Fallback for older tokens that used 'id' instead of 'userId'
     if (!decoded.userId && (decoded as any).id) {
       decoded.userId = (decoded as any).id;
     }
-    
+
     req.user = decoded;
     setRequestUserId(decoded.userId);
     next();
@@ -47,9 +47,9 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 export const authorizeRoles = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Access forbidden: You do not have the required permissions' 
+      return res.status(403).json({
+        success: false,
+        message: 'Access forbidden: You do not have the required permissions'
       });
     }
     next();

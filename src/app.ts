@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { errorMiddleware } from './middlewares/error.middleware';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
@@ -25,10 +26,19 @@ import reviewRoutes from './routes/review.routes';
 import supportInfoRoutes from './routes/support-info.routes';
 import guideRoutes from './routes/guide.routes';
 import notificationRoutes from './routes/notification.routes';
+import whatsappRoutes from './routes/whatsapp.routes';
 import healthRoutes from './routes/health.routes';
+import emailConfigRoutes from './routes/email-config.routes';
+import { couponRoutes } from './routes/coupon.routes';
 import { HealthController } from './controllers/health.controller';
 import { requestContextMiddleware } from './config/request-context';
+import { WhatsAppSessionService } from './services/whatsapp-session.service';
 import './workers/notification.worker'; // Initialize BullMQ worker
+
+// Initialize WhatsApp direct multi-device session
+WhatsAppSessionService.init().catch(err => {
+  console.error('[WhatsApp] Background initialization error:', err);
+});
 
 
 const app = express();
@@ -38,8 +48,16 @@ app.use(cors());
 app.use(express.json());
 app.use(requestContextMiddleware);
 
-// Serve static files from the 'uploads' directory
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve static files from 'uploads' directory with fallback to production server for missing local assets
+app.use('/uploads', (req, res, next) => {
+  const localFilePath = path.join(__dirname, '../uploads', req.path);
+  if (fs.existsSync(localFilePath) && fs.statSync(localFilePath).isFile()) {
+    return express.static(path.join(__dirname, '../uploads'))(req, res, next);
+  }
+  // If file doesn't exist on local disk, redirect to production asset host
+  const prodHost = process.env.PRODUCTION_MEDIA_URL || 'https://sculptshine.shop';
+  return res.redirect(`${prodHost}/uploads${req.path}`);
+});
 
 // Serve invoices from the 'public/invoices' directory
 app.use('/invoices', express.static(path.join(__dirname, '../public/invoices')));
@@ -55,6 +73,7 @@ app.use('/api/subcategories', subcategoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/coupons', couponRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/banners', bannerRoutes);
@@ -68,6 +87,8 @@ app.use('/api/support/info', supportInfoRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/guides', guideRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/email-config', emailConfigRoutes);
 app.use('/api/health', healthRoutes);
 
 // Health check endpoint

@@ -2,7 +2,9 @@ import { prisma } from '../config/prisma';
 import { emitOrderStatusUpdate, emitNewOrderToAdmin } from '../config/socket';
 import { ShippingService } from './shipping.service';
 import { NotificationService } from './notification.service';
+import { CouponService } from './coupon.service';
 
+const db = prisma as any;
 
 const createError = (statusCode: number, message: string) => {
   const error: any = new Error(message);
@@ -21,9 +23,13 @@ export class OrderService {
       shippingState: string;
       shippingPincode: string;
       notes?: string;
+      couponCode?: string;
     }
   ) {
-    const userProfile = await prisma.userProfile.findUnique({ where: { userId } });
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { userId },
+      include: { user: true },
+    });
     if (!userProfile) throw createError(404, 'User profile not found');
     const userProfileId = userProfile.id;
 
@@ -61,24 +67,55 @@ export class OrderService {
       return sum + finalPrice * item.quantity;
     }, 0);
 
+    // Validate coupon if provided
+    let couponDiscount = 0;
+    let couponId: string | null = null;
+    let couponCodeFormatted: string | null = null;
+
+    if (shippingInfo.couponCode && shippingInfo.couponCode.trim()) {
+      const couponValidation = await CouponService.validateAndCalculateDiscount(
+        shippingInfo.couponCode,
+        userProfileId,
+        cart.items,
+        subTotalAmount
+      );
+      couponDiscount = couponValidation.discountAmount;
+      couponId = couponValidation.coupon.id;
+      couponCodeFormatted = couponValidation.coupon.code;
+    }
+
     const { shippingAmount } = await ShippingService.calculateShipping(shippingInfo.shippingState, subTotalAmount);
-    const totalAmount = subTotalAmount + shippingAmount;
+    const totalAmount = Math.max(0, subTotalAmount - couponDiscount) + shippingAmount;
+
+    const finalShippingPhone = (shippingInfo.shippingPhone && shippingInfo.shippingPhone.trim()) || userProfile?.phone || '';
+    const finalShippingName = (shippingInfo.shippingName && shippingInfo.shippingName.trim()) || `${userProfile?.user?.firstName || ''} ${userProfile?.user?.lastName || ''}`.trim() || 'Customer';
+
+    if (finalShippingPhone && !userProfile.phone) {
+      await prisma.userProfile.update({
+        where: { id: userProfileId },
+        data: { phone: finalShippingPhone },
+      }).catch(() => {});
+    }
 
     const orderNumber = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     // Create order transactionally & deduct stock
     const order = await prisma.$transaction(async (tx) => {
-      const newOrder = await tx.order.create({
+      const txDb = tx as any;
+      const newOrder = await txDb.order.create({
         data: {
           orderNumber,
           userProfileId,
           subTotalAmount,
           shippingAmount,
           totalAmount,
+          couponCode: couponCodeFormatted,
+          couponDiscount,
+          couponId,
           status: 'PENDING_PAYMENT',
           paymentStatus: 'PENDING',
-          shippingName: shippingInfo.shippingName,
-          shippingPhone: shippingInfo.shippingPhone,
+          shippingName: finalShippingName,
+          shippingPhone: finalShippingPhone,
           shippingAddress: shippingInfo.shippingAddress,
           shippingCity: shippingInfo.shippingCity,
           shippingState: shippingInfo.shippingState,
@@ -111,14 +148,49 @@ export class OrderService {
         },
       });
 
-      // Note: Stock is validated here and will be deducted upon successful payment confirmation in payment.service.ts
-      // Note: Cart items are preserved and will be cleared only upon successful payment confirmation in payment.service.ts
+      // Record coupon usage and increment count
+      if (couponId) {
+        await txDb.couponUsage.create({
+          data: {
+            couponId,
+            userProfileId,
+            orderId: newOrder.id,
+            discountAmount: couponDiscount,
+          },
+        });
+
+        await txDb.coupon.update({
+          where: { id: couponId },
+          data: {
+            usedCount: { increment: 1 },
+          },
+        });
+      }
 
       return newOrder;
     });
 
     // Notify admin in real time
     emitNewOrderToAdmin(order);
+    try {
+      await NotificationService.notifyAdmins(
+        'New Order Received! 🛍️',
+        `Order #${order.orderNumber} for ₹${Number(order.totalAmount).toFixed(2)} was placed by ${order.shippingName}.`,
+        `/orders/${order.id}`,
+        'ORDER_UPDATE'
+      );
+    } catch {}
+
+    // Notify customer
+    try {
+      await NotificationService.sendToUser(
+        order.userProfileId,
+        'Order Placed Successfully! 🛍️',
+        `Thank you! Your order #${order.orderNumber} for ₹${Number(order.totalAmount).toFixed(2)} has been placed.`,
+        'ORDER_UPDATE',
+        '/orders'
+      );
+    } catch {}
 
     return order;
   }
@@ -291,17 +363,55 @@ export class OrderService {
     };
   }
 
-  static async getAdminOrders(page = 1, limit = 10, status?: string, search?: string) {
+  static async getAdminOrders(
+    page = 1,
+    limit = 10,
+    status?: string,
+    search?: string,
+    startDate?: string,
+    endDate?: string
+  ) {
     const skip = (page - 1) * limit;
     const where: any = {};
-    if (status) where.status = status;
+    if (status && status !== 'ALL') where.status = status;
 
-    if (search) {
+    if (search && search.trim()) {
+      const q = search.trim();
       where.OR = [
-        { orderNumber: { contains: search, mode: 'insensitive' } },
-        { shippingName: { contains: search, mode: 'insensitive' } },
-        { shippingPhone: { contains: search, mode: 'insensitive' } },
+        { orderNumber: { contains: q, mode: 'insensitive' } },
+        { shippingName: { contains: q, mode: 'insensitive' } },
+        { shippingPhone: { contains: q, mode: 'insensitive' } },
+        { shippingAddress: { contains: q, mode: 'insensitive' } },
+        { couponCode: { contains: q, mode: 'insensitive' } },
+        {
+          userProfile: {
+            OR: [
+              { phone: { contains: q, mode: 'insensitive' } },
+              {
+                user: {
+                  OR: [
+                    { firstName: { contains: q, mode: 'insensitive' } },
+                    { lastName: { contains: q, mode: 'insensitive' } },
+                    { email: { contains: q, mode: 'insensitive' } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
       ];
+    }
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
     }
 
     const [orders, total, kpiData] = await Promise.all([
@@ -347,6 +457,12 @@ export class OrderService {
       }
     });
 
+    orders.forEach((o: any) => {
+      if (o.userProfile && !o.userProfile.phone && o.shippingPhone) {
+        o.userProfile.phone = o.shippingPhone;
+      }
+    });
+
     return {
       kpis,
       orders,
@@ -376,6 +492,10 @@ export class OrderService {
 
     if (!isAdmin && requestingUserId && order.userProfile?.user?.id !== requestingUserId) {
       throw createError(403, 'Unauthorized access to this order');
+    }
+
+    if (order.userProfile && !order.userProfile.phone && order.shippingPhone) {
+      order.userProfile.phone = order.shippingPhone;
     }
 
     return order;

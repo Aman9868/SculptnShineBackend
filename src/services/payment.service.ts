@@ -3,6 +3,7 @@ import { phonepeConfig, phonepeClient } from '../config/phonepe.config';
 import { OrderService } from './order.service';
 import { emitOrderStatusUpdate } from '../config/socket';
 import { InvoiceService } from './invoice.service';
+import { NotificationService } from './notification.service';
 
 const createError = (statusCode: number, message: string) => {
   const error: any = new Error(message);
@@ -165,6 +166,27 @@ export class PaymentService {
         paymentStatus: 'COMPLETED',
         updatedAt: new Date(),
       });
+
+      // Notify admin of completed payment
+      try {
+        await NotificationService.notifyAdmins(
+          'Payment Completed! 💳',
+          `Order #${payment.order.orderNumber} (₹${payment.order.totalAmount}) is PAID.`,
+          `/orders/${payment.orderId}`,
+          'ORDER_UPDATE'
+        );
+      } catch {}
+
+      // Notify customer of payment confirmation
+      try {
+        await NotificationService.sendToUser(
+          payment.order.userProfileId,
+          'Payment Successful! 💳',
+          `Payment for your Order #${payment.order.orderNumber} (₹${payment.order.totalAmount}) was successful!`,
+          'ORDER_UPDATE',
+          `/orders/${payment.orderId}`
+        );
+      } catch {}
 
       // Clear user cart items upon successful payment confirmation
       try {

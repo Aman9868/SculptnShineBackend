@@ -69,7 +69,7 @@ export class WishlistService {
           product: {
             include: {
               variants: {
-                where: { isDefault: true },
+                orderBy: { isDefault: 'desc' },
                 take: 1
               }
             }
@@ -80,20 +80,29 @@ export class WishlistService {
 
     // Format the items to a flatter structure suitable for frontend
     const formattedItems = items.map((item: any) => {
-      const defaultVariant = item.product.variants[0];
+      const defaultVariant = item.product.variants?.[0];
+      const unitPrice = defaultVariant ? defaultVariant.unitPrice : item.product.unitPrice;
+      const discountPercentage = defaultVariant ? (defaultVariant.discountPercentage || 0) : (item.product.discountPercentage || 0);
+      const stock = defaultVariant ? defaultVariant.stock : item.product.stock;
+      const thumbnail = (defaultVariant?.images && defaultVariant.images.length > 0 ? defaultVariant.images[0] : null) ||
+        (item.product.images && item.product.images.length > 0 ? item.product.images[0] : null);
+
       return {
         id: item.id,
         productId: item.productId,
         createdAt: item.createdAt,
         product: {
           id: item.product.id,
-          name: item.product.name,
+          name: item.product.title,
+          title: item.product.title,
           slug: item.product.slug,
-          thumbnail: item.product.images[0] || (defaultVariant ? defaultVariant.images[0] : null),
-          price: defaultVariant?.price || 0,
-          discountPrice: defaultVariant?.discountPrice || null,
+          thumbnail,
+          unitPrice: unitPrice || 0,
+          price: unitPrice || 0,
+          discountPercentage,
+          discountPrice: discountPercentage > 0 ? unitPrice * (1 - discountPercentage / 100) : null,
           status: item.product.status,
-          stock: defaultVariant?.stock || 0
+          stock: stock ?? 0
         }
       };
     });

@@ -235,4 +235,26 @@ export class AuthService {
     // Remove password hash from response
     return formatUserResponse(updatedUser);
   }
+
+  static async deleteAccount(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true },
+    });
+
+    if (!user) {
+      throw { statusCode: 404, message: 'User not found' } as AppError;
+    }
+
+    if (user.role === 'ADMIN') {
+      throw { statusCode: 403, message: 'Admin accounts cannot be deleted directly' } as AppError;
+    }
+
+    // Delete user (Prisma cascade removes userProfile, addresses, cart, etc.)
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return { success: true, message: 'Account and profile deleted successfully' };
+  }
 }

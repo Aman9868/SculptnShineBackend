@@ -11,9 +11,9 @@ export class NotificationController {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
       }
 
-      const userProfile = await prisma.userProfile.findUnique({ where: { userId } });
+      let userProfile = await prisma.userProfile.findUnique({ where: { userId } });
       if (!userProfile) {
-        return res.status(404).json({ success: false, message: 'User profile not found' });
+        userProfile = await prisma.userProfile.create({ data: { userId } });
       }
 
       const userProfileId = userProfile.id;
@@ -34,19 +34,56 @@ export class NotificationController {
   static async getMyNotifications(req: Request, res: Response) {
     try {
       const userId = req.user?.userId;
+      const userRole = req.user?.role;
       if (!userId) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
       }
 
-      const userProfile = await prisma.userProfile.findUnique({ where: { userId } });
+      let userProfile = await prisma.userProfile.findUnique({ where: { userId } });
       if (!userProfile) {
-        return res.status(404).json({ success: false, message: 'User profile not found' });
+        userProfile = await prisma.userProfile.create({ data: { userId } });
       }
 
       const userProfileId = userProfile.id;
 
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
-      const notifications = await NotificationService.getMyNotifications(userProfileId, limit);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 30;
+
+      // If user is Admin, ensure past orders have notification entries if table is empty
+      if (userRole === 'ADMIN') {
+        const count = await prisma.notification.count({ where: { type: 'ORDER_UPDATE' } });
+        if (count === 0) {
+          const recentOrders = await prisma.order.findMany({
+            take: 10,
+            orderBy: { createdAt: 'desc' },
+          });
+          for (const ord of recentOrders) {
+            await prisma.notification.create({
+              data: {
+                userProfileId,
+                title: ord.status === 'PAID' ? 'Payment Completed! 💳' : 'New Order Received! 🛍️',
+                message: `Order #${ord.orderNumber} for ₹${ord.totalAmount} by ${ord.shippingName || 'Customer'}.`,
+                type: 'ORDER_UPDATE',
+                link: `/orders/${ord.id}`,
+                createdAt: ord.createdAt,
+              },
+            }).catch(() => {});
+          }
+        }
+      }
+
+      // If user is Admin, return all admin order and payment notifications + direct notifications
+      const notifications = await prisma.notification.findMany({
+        where: userRole === 'ADMIN'
+          ? {
+              OR: [
+                { userProfileId },
+                { type: 'ORDER_UPDATE' },
+              ],
+            }
+          : { userProfileId },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      });
       
       return res.status(200).json({ success: true, data: notifications });
     } catch (error: any) {
@@ -62,9 +99,9 @@ export class NotificationController {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
       }
 
-      const userProfile = await prisma.userProfile.findUnique({ where: { userId } });
+      let userProfile = await prisma.userProfile.findUnique({ where: { userId } });
       if (!userProfile) {
-        return res.status(404).json({ success: false, message: 'User profile not found' });
+        userProfile = await prisma.userProfile.create({ data: { userId } });
       }
 
       const userProfileId = userProfile.id;

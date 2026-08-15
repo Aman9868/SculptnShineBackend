@@ -4,9 +4,11 @@ import { authenticate, authorizeRoles } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-// User routes (Authenticated)
-router.post('/subscribe', authenticate, NotificationController.subscribe);
+// User & Admin routes (Authenticated)
+router.get('/', authenticate, NotificationController.getMyNotifications);
 router.get('/my-notifications', authenticate, NotificationController.getMyNotifications);
+router.post('/subscribe', authenticate, NotificationController.subscribe);
+router.patch('/all/read', authenticate, NotificationController.markAsRead);
 router.patch('/:id/read', authenticate, NotificationController.markAsRead);
 
 // Admin routes (Admin only)
