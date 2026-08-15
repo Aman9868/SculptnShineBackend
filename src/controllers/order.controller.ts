@@ -106,7 +106,7 @@ export class OrderController {
       const userId = req.user!.userId;
       const isAdmin = req.user!.role === 'ADMIN';
       const order = await OrderService.getOrderById(req.params.id as string, userId, isAdmin);
-      
+
       const businessConfig = await prisma.businessConfig.findFirst() || {
         brandName: 'Sculpt & Shine',
         address: '123 Wellness Ave',
@@ -120,7 +120,16 @@ export class OrderController {
 
       let logoSvg = '';
       try {
-        logoSvg = fs.readFileSync(path.join(process.cwd(), 'src/assets/logo.svg'), 'utf-8');
+        const logoPath = fs.existsSync(path.join(process.cwd(), 'src/assets/logo.svg'))
+          ? path.join(process.cwd(), 'src/assets/logo.svg')
+          : fs.existsSync(path.join(process.cwd(), 'dist/assets/logo.svg'))
+            ? path.join(process.cwd(), 'dist/assets/logo.svg')
+            : path.join(__dirname, '../assets/logo.svg');
+        if (fs.existsSync(logoPath)) {
+          logoSvg = fs.readFileSync(logoPath, 'utf-8');
+        } else {
+          logoSvg = '<div class="logo-icon">S</div>';
+        }
       } catch (e) {
         logoSvg = '<div class="logo-icon">S</div>';
       }
@@ -282,12 +291,12 @@ export class OrderController {
             </thead>
             <tbody>
               ${order.items.map((item: any, idx: number) => {
-                const lineTotal = item.unitPrice * item.quantity;
-                const taxableAmount = lineTotal / (1 + item.gst / 100);
-                const gstAmount = lineTotal - taxableAmount;
-                const cgst = gstAmount / 2;
-                const sgst = gstAmount / 2;
-                return `
+        const lineTotal = item.unitPrice * item.quantity;
+        const taxableAmount = lineTotal / (1 + item.gst / 100);
+        const gstAmount = lineTotal - taxableAmount;
+        const cgst = gstAmount / 2;
+        const sgst = gstAmount / 2;
+        return `
                 <tr>
                   <td class="center">${idx + 1}</td>
                   <td>
@@ -302,23 +311,23 @@ export class OrderController {
                   <td class="right">₹${sgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                   <td class="right">₹${lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                 </tr>`;
-              }).join('')}
+      }).join('')}
             </tbody>
           </table>
 
           ${(() => {
-            let totalTaxable = 0;
-            let totalCgst = 0;
-            let totalSgst = 0;
-            order.items.forEach((item: any) => {
-              const lineTotal = item.unitPrice * item.quantity;
-              const taxable = lineTotal / (1 + item.gst / 100);
-              const gst = lineTotal - taxable;
-              totalTaxable += taxable;
-              totalCgst += gst / 2;
-              totalSgst += gst / 2;
-            });
-            return `
+          let totalTaxable = 0;
+          let totalCgst = 0;
+          let totalSgst = 0;
+          order.items.forEach((item: any) => {
+            const lineTotal = item.unitPrice * item.quantity;
+            const taxable = lineTotal / (1 + item.gst / 100);
+            const gst = lineTotal - taxable;
+            totalTaxable += taxable;
+            totalCgst += gst / 2;
+            totalSgst += gst / 2;
+          });
+          return `
           <div class="totals-container">
             <div class="totals">
               <div class="totals-row">
@@ -354,7 +363,7 @@ export class OrderController {
               </div>
               <div class="tax-note">(Inclusive of GST)</div>
             `;
-          })()}
+        })()}
             </div>
           </div>
 
@@ -381,7 +390,23 @@ export class OrderController {
         </html>
       `;
 
-      const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+      const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH ||
+        (fs.existsSync('/usr/bin/chromium-browser') ? '/usr/bin/chromium-browser' :
+          fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
+
+      const browser = await puppeteer.launch({
+        headless: true,
+        executablePath,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+        ],
+      });
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'load' });
       const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '10mm', bottom: '10mm', left: '10mm', right: '10mm' } });
@@ -398,7 +423,7 @@ export class OrderController {
   static async trackOrder(req: Request, res: Response, next: NextFunction) {
     try {
       const { orderNumber, emailOrPhone } = req.body;
-      
+
       if (!orderNumber || !emailOrPhone) {
         return res.status(400).json({
           success: false,

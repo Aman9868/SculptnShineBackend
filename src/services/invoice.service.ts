@@ -37,8 +37,14 @@ export class InvoiceService {
       throw createError(500, 'Business configuration not found');
     }
 
-    const templatePath = path.join(__dirname, '../templates/invoice.ejs');
-    
+    let templatePath = path.join(__dirname, '../templates/invoice.ejs');
+    if (!fs.existsSync(templatePath)) {
+      templatePath = path.join(process.cwd(), 'src/templates/invoice.ejs');
+    }
+    if (!fs.existsSync(templatePath)) {
+      templatePath = path.join(process.cwd(), 'dist/templates/invoice.ejs');
+    }
+
     // Ensure template exists
     if (!fs.existsSync(templatePath)) {
       throw createError(500, 'Invoice template not found');
@@ -54,11 +60,24 @@ export class InvoiceService {
     const fileName = `invoice-${order.orderNumber}.pdf`;
     const filePath = path.join(invoicesDir, fileName);
 
+    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH ||
+      (fs.existsSync('/usr/bin/chromium-browser') ? '/usr/bin/chromium-browser' :
+        fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
+
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+      ],
     });
-    
+
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'load' });
     await page.pdf({
@@ -99,7 +118,7 @@ export class InvoiceService {
     const userName = order.userProfile.user.firstName || order.shippingName;
 
     const filePath = path.join(process.cwd(), 'public', (order as any).invoiceUrl);
-    
+
     if (!fs.existsSync(filePath)) {
       throw createError(404, 'Invoice PDF file not found on disk');
     }

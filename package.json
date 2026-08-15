@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon",
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && tsc && mkdir -p dist/templates dist/assets && cp -r src/templates/* dist/templates/ 2>/dev/null || true && cp -r src/assets/* dist/assets/ 2>/dev/null || true",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma db push",
