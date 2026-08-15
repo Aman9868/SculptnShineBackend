@@ -48,19 +48,39 @@ app.use(cors());
 app.use(express.json());
 app.use(requestContextMiddleware);
 
-// Serve static files from 'uploads' directory with fallback to production server for missing local assets
-app.use('/uploads', (req, res, next) => {
-  const localFilePath = path.join(__dirname, '../uploads', req.path);
-  if (fs.existsSync(localFilePath) && fs.statSync(localFilePath).isFile()) {
-    return express.static(path.join(__dirname, '../uploads'))(req, res, next);
+// Serve static files from 'uploads' directory with CORS and fallback
+const uploadsPath = path.resolve(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+
+app.use('/uploads', express.static(uploadsPath, {
+  maxAge: '7d',
+  etag: true,
+  setHeaders: (res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   }
-  // If file doesn't exist on local disk, redirect to production asset host
-  const prodHost = process.env.PRODUCTION_MEDIA_URL || 'https://sculptshine.shop';
-  return res.redirect(`${prodHost}/uploads${req.path}`);
+}));
+
+// Missing static upload fallback
+app.use('/uploads', (req: Request, res: Response) => {
+  if (process.env.NODE_ENV !== 'production' && process.env.PRODUCTION_MEDIA_URL) {
+    return res.redirect(`${process.env.PRODUCTION_MEDIA_URL}/uploads${req.path}`);
+  }
+  return res.status(404).json({ success: false, message: 'File not found' });
 });
 
 // Serve invoices from the 'public/invoices' directory
-app.use('/invoices', express.static(path.join(__dirname, '../public/invoices')));
+const invoicesPath = path.resolve(process.cwd(), 'public/invoices');
+if (!fs.existsSync(invoicesPath)) {
+  fs.mkdirSync(invoicesPath, { recursive: true });
+}
+app.use('/invoices', express.static(invoicesPath, {
+  setHeaders: (res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+}));
 
 // Routes
 app.use('/api/auth', authRoutes);
