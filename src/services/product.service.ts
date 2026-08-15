@@ -431,6 +431,70 @@ export class ProductService {
       cleanData.expiryDate = new Date(cleanData.expiryDate);
     }
 
+    // Process and synchronize product variants if provided
+    if (Array.isArray(variants)) {
+      const incomingVariantIds = variants.map((v: any) => v.id).filter(Boolean);
+      
+      // Delete variants that were removed in the edit form
+      const variantsToDelete = existing.variants.filter((ev: any) => !incomingVariantIds.includes(ev.id));
+      if (variantsToDelete.length > 0) {
+        await prisma.productVariant.deleteMany({
+          where: { id: { in: variantsToDelete.map((v: any) => v.id) } },
+        });
+      }
+
+      // Upsert/create/update incoming variants
+      for (const [idx, v] of variants.entries()) {
+        const variantSku = v.sku?.trim() || `${cleanData.sku || existing.sku}-V${idx + 1}`;
+        const variantData: any = {
+          title: v.title || `${v.flavor || ''} ${v.weight || ''}`.trim() || `Variant ${idx + 1}`,
+          sku: variantSku,
+          flavor: v.flavor || null,
+          weight: v.weight || null,
+          unitPrice: parseFloat(v.unitPrice) || parseFloat(cleanData.unitPrice) || existing.unitPrice,
+          discountPercentage: v.discountPercentage !== undefined ? parseFloat(v.discountPercentage) : 0,
+          gst: v.gst !== undefined ? parseFloat(v.gst) : 18,
+          expiryDate: v.expiryDate ? new Date(v.expiryDate) : (cleanData.expiryDate || null),
+          stock: parseInt(v.stock) >= 0 ? parseInt(v.stock) : 0,
+          images: Array.isArray(v.images) ? v.images : (cleanData.images || existing.images || []),
+          isDefault: v.isDefault ?? (idx === 0),
+        };
+
+        if (v.id && existing.variants.some((ev: any) => ev.id === v.id)) {
+          await prisma.productVariant.update({
+            where: { id: v.id },
+            data: variantData,
+          });
+        } else {
+          await prisma.productVariant.create({
+            data: {
+              ...variantData,
+              productId: id,
+            },
+          });
+        }
+      }
+
+      if (variants.length > 0) {
+        // Compute aggregate stock and earliest active expiry date
+        const totalVariantStock = variants.reduce((sum: number, v: any) => sum + (parseInt(v.stock) || 0), 0);
+        cleanData.stock = totalVariantStock;
+
+        const activeExpiries = variants
+          .filter((v: any) => v.expiryDate && (parseInt(v.stock) || 0) > 0)
+          .map((v: any) => new Date(v.expiryDate).getTime());
+
+        if (activeExpiries.length > 0) {
+          cleanData.expiryDate = new Date(Math.min(...activeExpiries));
+        }
+
+        const lowestPrice = Math.min(...variants.map((v: any) => parseFloat(v.unitPrice)).filter((p: number) => !isNaN(p) && p > 0));
+        if (isFinite(lowestPrice) && lowestPrice > 0) {
+          cleanData.unitPrice = lowestPrice;
+        }
+      }
+    }
+
     const stockDifference = cleanData.stock !== undefined ? cleanData.stock - existing.stock : 0;
 
     const updatedProduct = await prisma.product.update({
