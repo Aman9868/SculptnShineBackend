@@ -148,6 +148,86 @@ export class OrderService {
         },
       });
 
+      // Deduct inventory using FEFO (First-Expiry-First-Out)
+      for (const item of cart.items) {
+        if (item.variantId) {
+          const orderedVariant = await txDb.productVariant.findUnique({
+            where: { id: item.variantId },
+          });
+
+          if (orderedVariant) {
+            // Find all batches with the same flavor and weight ordered by earliest expiry first
+            const matchingBatches = await txDb.productVariant.findMany({
+              where: {
+                productId: item.productId,
+                flavor: orderedVariant.flavor,
+                weight: orderedVariant.weight,
+                stock: { gt: 0 },
+              },
+              orderBy: [
+                { expiryDate: 'asc' },
+                { createdAt: 'asc' },
+              ],
+            });
+
+            let remainingToDeduct = item.quantity;
+
+            if (matchingBatches.length > 0) {
+              for (const batch of matchingBatches) {
+                if (remainingToDeduct <= 0) break;
+                const deductQty = Math.min(batch.stock, remainingToDeduct);
+                await txDb.productVariant.update({
+                  where: { id: batch.id },
+                  data: { stock: { decrement: deductQty } },
+                });
+                remainingToDeduct -= deductQty;
+              }
+            } else {
+              await txDb.productVariant.update({
+                where: { id: orderedVariant.id },
+                data: { stock: { decrement: item.quantity } },
+              });
+            }
+          }
+        }
+
+        // Deduct parent product stock and recalculate earliest active expiry
+        const updatedParent = await txDb.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: { decrement: item.quantity },
+          },
+          include: { variants: true },
+        });
+
+        const activeVariants = updatedParent.variants.filter((v: any) => v.stock > 0 && v.expiryDate);
+        if (activeVariants.length > 0) {
+          const earliest = new Date(Math.min(...activeVariants.map((v: any) => new Date(v.expiryDate).getTime())));
+          await txDb.product.update({
+            where: { id: item.productId },
+            data: {
+              expiryDate: earliest,
+              status: updatedParent.stock <= 0 ? 'OUT_OF_STOCK' : updatedParent.status,
+            },
+          });
+        } else if (updatedParent.stock <= 0) {
+          await txDb.product.update({
+            where: { id: item.productId },
+            data: { status: 'OUT_OF_STOCK' },
+          });
+        }
+
+        // Create inventory audit log
+        await txDb.inventoryLog.create({
+          data: {
+            productId: item.productId,
+            change: -item.quantity,
+            type: 'ORDER_FULFILLMENT',
+            reason: `Order #${newOrder.orderNumber} placed (FEFO inventory deduction)`,
+          },
+        }).catch(() => {});
+      }
+
       // Record coupon usage and increment count
       if (couponId) {
         await txDb.couponUsage.create({
