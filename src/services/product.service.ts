@@ -413,6 +413,15 @@ export class ProductService {
       if (brandObj) {
         brandId = brandObj.id;
       }
+    } else if (cleanData.brand && typeof cleanData.brand === 'string' && cleanData.brand.trim()) {
+      const brandObj = await BrandService.findOrCreateBrandByName(cleanData.brand);
+      if (brandObj) {
+        brandId = brandObj.id;
+      }
+    }
+
+    if (brandId === "") {
+      brandId = null;
     }
 
     if (brandId !== undefined) {
