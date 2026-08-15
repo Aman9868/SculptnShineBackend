@@ -8,8 +8,9 @@ const router = Router();
 // Configure multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Store files in the local 'uploads' directory
-    cb(null, path.join(__dirname, '../../uploads'));
+    // Store files in the 'uploads' directory
+    const uploadDir = path.resolve(process.cwd(), 'uploads');
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     // Generate a unique filename using timestamp and original extension
