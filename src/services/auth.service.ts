@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/prisma';
 import { AppError } from '../middlewares/error.middleware';
+import { DbLoggerService } from './db-logger.service';
 import {
   DecodedRefreshToken,
   jwtConfig,
@@ -77,6 +78,11 @@ export class AuthService {
 
     const formattedUser = formatUserResponse(newUser);
 
+    DbLoggerService.logAuth('USER_REGISTERED', newUser.id, newUser.email, 'SUCCESS', {
+      firstName: newUser.firstName,
+      lastName: newUser.lastName,
+    });
+
     return {
       user: formattedUser,
       accessToken,
@@ -98,6 +104,7 @@ export class AuthService {
     });
 
     if (!user) {
+      DbLoggerService.logAuth('LOGIN_FAILED', undefined, email, 'FAILED', { reason: 'User not found' });
       throw { statusCode: 401, message: 'Invalid email or password' } as AppError;
     }
 
@@ -105,12 +112,14 @@ export class AuthService {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!isMatch) {
+      DbLoggerService.logAuth('LOGIN_FAILED', user.id, email, 'FAILED', { reason: 'Incorrect password' });
       throw { statusCode: 401, message: 'Invalid email or password' } as AppError;
     }
 
     const payload = {
       userId: user.id,
       role: user.role,
+      email: user.email,
     };
 
     const accessToken = signAccessToken(payload);
@@ -123,6 +132,8 @@ export class AuthService {
     });
 
     const formattedUser = formatUserResponse(user);
+
+    DbLoggerService.logAuth(user.role === 'ADMIN' ? 'ADMIN_LOGIN' : 'USER_LOGIN', user.id, user.email, 'SUCCESS');
 
     return {
       user: formattedUser,

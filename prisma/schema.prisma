@@ -70,12 +70,22 @@ enum Gender {
 
 model AuditLog {
   id        String   @id @default(uuid())
-  action    String   // e.g., "Updated Profile", "Registered"
-  entity    String   // e.g., "User", "Order"
+  action    String   // e.g., "ORDER_CREATED", "PAYMENT_SUCCESS", "PRODUCT_UPDATED", "CATALOG_SEARCH"
+  entity    String   // e.g., "Order", "Payment", "Product", "Category", "Brand", "User", "Auth", "CatalogSearch"
+  entityId  String?  // The specific ID of the entity affected
   userId    String?  // The user who performed the action
-  user      User?    @relation(fields: [userId], references: [id])
-  details   Json?    // Any additional metadata
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userEmail String?  // Cached snapshot of user email
+  ipAddress String?  // Client IP
+  userAgent String?  // Client user agent / device
+  status    String   @default("SUCCESS") // SUCCESS, FAILED, WARNING, INFO
+  details   Json?    // Structured JSON metadata / diffs / payload
   createdAt DateTime @default(now())
+
+  @@index([entity, createdAt])
+  @@index([action, createdAt])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model Address {

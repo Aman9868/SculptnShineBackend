@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { DecodedAccessToken, getAccessTokenSecret } from '../config/jwt.config';
-import { setRequestUserId } from '../config/request-context';
+import { setRequestUser } from '../config/request-context';
 
 // Extend Express Request object to include user
 declare global {
@@ -37,7 +37,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     }
 
     req.user = decoded;
-    setRequestUserId(decoded.userId);
+    setRequestUser(decoded.userId, decoded.email);
     next();
   } catch (error) {
     return res.status(401).json({ success: false, message: 'Token is not valid' });

@@ -31,15 +31,21 @@ import healthRoutes from './routes/health.routes';
 import emailConfigRoutes from './routes/email-config.routes';
 import { couponRoutes } from './routes/coupon.routes';
 import cacheRoutes from './routes/cache.routes';
+import resourceMetricsRoutes from './routes/resource-metrics.routes';
 import { HealthController } from './controllers/health.controller';
 import { requestContextMiddleware } from './config/request-context';
 import { WhatsAppSessionService } from './services/whatsapp-session.service';
-import './workers/notification.worker'; // Initialize BullMQ worker
+import { initMaintenanceScheduler } from './config/queue';
+import './workers/notification.worker'; // Initialize BullMQ notification worker
+import './workers/maintenance.worker'; // Initialize BullMQ maintenance worker
 
 // Initialize WhatsApp direct multi-device session
 WhatsAppSessionService.init().catch(err => {
   console.error('[WhatsApp] Background initialization error:', err);
 });
+
+// Initialize automated BullMQ background log retention scheduler (Runs daily at 03:00 AM)
+initMaintenanceScheduler();
 
 
 const app = express();
@@ -112,6 +118,7 @@ app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/email-config', emailConfigRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/admin/cache', cacheRoutes);
+app.use('/api/system', resourceMetricsRoutes);
 
 // Health check endpoint
 app.get('/health', HealthController.checkHealth);

@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma';
 import { BrandService } from './brand.service';
 import { cacheService, CACHE_TTL, CACHE_PATTERNS } from './cache.service';
+import { DbLoggerService } from './db-logger.service';
 
 const createError = (statusCode: number, message: string) => {
   const error: any = new Error(message);
@@ -152,7 +153,7 @@ export class ProductService {
         prisma.product.count({ where }),
       ]);
 
-      return {
+      const result = {
         products,
         pagination: {
           total,
@@ -161,6 +162,12 @@ export class ProductService {
           totalPages: Math.ceil(total / limit),
         },
       };
+
+      if (query.search || query.categoryId || query.brandId || query.preference || query.flavors || query.weights || query.minPrice || query.maxPrice) {
+        DbLoggerService.logCatalogSearch(query.search, query, total);
+      }
+
+      return result;
     });
   }
 
@@ -404,6 +411,16 @@ export class ProductService {
     }
 
     await this.invalidateProductCache();
+
+    DbLoggerService.logProduct('PRODUCT_CREATED', product.id, {
+      title: product.title,
+      sku: product.sku,
+      unitPrice: product.unitPrice,
+      stock: product.stock,
+      categoryId: product.categoryId,
+      brandId: product.brandId,
+    });
+
     return product;
   }
 
@@ -569,6 +586,14 @@ export class ProductService {
     }
 
     await this.invalidateProductCache();
+
+    DbLoggerService.logProduct('PRODUCT_UPDATED', updatedProduct.id, {
+      title: updatedProduct.title,
+      sku: updatedProduct.sku,
+      updatedFields: Object.keys(data),
+      stockDifference,
+    });
+
     return updatedProduct;
   }
 
@@ -576,6 +601,9 @@ export class ProductService {
     try {
       await prisma.product.delete({ where: { id } });
       await this.invalidateProductCache();
+
+      DbLoggerService.logProduct('PRODUCT_DELETED', id, { productId: id });
+
       return { message: 'Product deleted successfully' };
     } catch (error) {
       throw createError(404, 'Product not found');
@@ -943,6 +971,14 @@ export class ProductService {
     }
 
     await this.invalidateProductCache();
+
+    DbLoggerService.logProduct('BULK_UPLOAD', undefined, {
+      totalProcessed: rawProducts.length,
+      created: results.created,
+      updated: results.updated,
+      failed: results.failed,
+    });
+
     return results;
   }
 

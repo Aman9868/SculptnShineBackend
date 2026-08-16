@@ -5,6 +5,7 @@ export type JwtRole = 'ADMIN' | 'USER';
 export interface AccessTokenPayload {
   userId: string;
   role: JwtRole;
+  email?: string;
 }
 
 export interface DecodedAccessToken extends AccessTokenPayload {
