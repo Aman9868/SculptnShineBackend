@@ -379,6 +379,7 @@ model Banner {
   title      String
   subtitle   String?
   image      String
+  mobileImage String?
   video      String?
   link       String?
   ctaText    String?

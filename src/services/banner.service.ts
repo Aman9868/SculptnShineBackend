@@ -90,6 +90,7 @@ export class BannerService {
     title: string;
     subtitle?: string;
     image?: string;
+    mobileImage?: string | null;
     video?: string;
     link?: string;
     ctaText?: string;
@@ -126,6 +127,7 @@ export class BannerService {
         title: data.title.trim(),
         subtitle: data.subtitle?.trim() || null,
         image: data.image?.trim() || '',
+        mobileImage: data.mobileImage?.trim() || null,
         video: data.video?.trim() || null,
         link: data.link?.trim() || null,
         ctaText: data.ctaText?.trim() || null,
@@ -157,6 +159,7 @@ export class BannerService {
         title: data.title !== undefined ? data.title.trim() : undefined,
         subtitle: data.subtitle !== undefined ? (data.subtitle?.trim() || null) : undefined,
         image: data.image !== undefined ? (data.image?.trim() || '') : undefined,
+        mobileImage: data.mobileImage !== undefined ? (data.mobileImage?.trim() || null) : undefined,
         video: data.video !== undefined ? (data.video?.trim() || null) : undefined,
         link: data.link !== undefined ? (data.link?.trim() || null) : undefined,
         ctaText: data.ctaText !== undefined ? (data.ctaText?.trim() || null) : undefined,
