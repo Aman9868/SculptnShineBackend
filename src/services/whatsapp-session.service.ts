@@ -34,10 +34,31 @@ export class WhatsAppSessionService {
   private static isAutomationEnabled: boolean = true;
 
   /**
-   * Initializes the WhatsApp Baileys multi-device socket
+   * Checks if valid WhatsApp session credentials already exist on disk
    */
-  static async init() {
+  public static hasSavedSession(): boolean {
+    const credsPath = path.join(this.authDir, 'creds.json');
+    if (!fs.existsSync(credsPath)) return false;
+    try {
+      const data = JSON.parse(fs.readFileSync(credsPath, 'utf-8'));
+      return !!(data && (data.me || data.registered || data.account));
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Initializes the WhatsApp Baileys multi-device socket
+   * @param force - If true, starts initialization even if no saved credentials exist (e.g. when Admin requests QR)
+   */
+  static async init(force: boolean = false) {
     if (this.isInitializing || (this.socket && this.status === 'CONNECTED')) {
+      return;
+    }
+
+    // On backend boot, only auto-init if an existing paired session is saved
+    if (!force && !this.hasSavedSession()) {
+      this.status = 'DISCONNECTED';
       return;
     }
 
@@ -50,12 +71,19 @@ export class WhatsAppSessionService {
       }
 
       const { state, saveCreds } = await useMultiFileAuthState(this.authDir);
-      const { version, isLatest } = await fetchLatestBaileysVersion().catch(() => ({
+      const { version } = await fetchLatestBaileysVersion().catch(() => ({
         version: [2, 3000, 1015901307] as [number, number, number],
-        isLatest: true,
       }));
 
       const logger = pino({ level: 'silent' });
+
+      // End previous socket if any
+      if (this.socket) {
+        try {
+          this.socket.end(undefined);
+        } catch (_) {}
+        this.socket = null;
+      }
 
       this.socket = makeWASocket({
         version,
@@ -86,6 +114,7 @@ export class WhatsAppSessionService {
               },
             });
             this.status = 'SCAN_QR';
+            this.reconnectAttempts = 0;
           } catch (err) {
             console.error('[WhatsApp] Failed to generate QR data URL:', err);
           }
@@ -93,29 +122,35 @@ export class WhatsAppSessionService {
 
         if (connection === 'close') {
           const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
-          const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+          const isLoggedOut = statusCode === DisconnectReason.loggedOut;
+          const isPaired = this.hasSavedSession();
 
           this.status = 'DISCONNECTED';
           this.qrCodeString = null;
           this.qrCodeDataUrl = null;
 
-          if (shouldReconnect) {
+          if (isLoggedOut) {
+            console.log('[WhatsApp] Session logged out. Clearing auth credentials.');
+            await this.clearAuthState();
+            this.isInitializing = false;
+            this.reconnectAttempts = 0;
+          } else if (isPaired) {
+            // Reconnect only if this was an active, authorized session experiencing a temporary network disconnect
             if (this.reconnectAttempts < this.maxReconnectAttempts) {
               this.reconnectAttempts++;
               const delay = Math.min(5000 * this.reconnectAttempts, 30000);
-              console.log(`[WhatsApp] Connection closed. Reconnecting in ${delay / 1000}s (Attempt ${this.reconnectAttempts})...`);
+              console.log(`[WhatsApp] Paired connection dropped. Reconnecting in ${delay / 1000}s (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
               setTimeout(() => {
                 this.isInitializing = false;
-                this.init();
+                this.init(true);
               }, delay);
             } else {
-              console.warn('[WhatsApp] Max reconnect attempts reached. Waiting for admin manual reconnect.');
+              console.warn('[WhatsApp] Max reconnect attempts reached for paired session.');
             }
           } else {
-            console.log('[WhatsApp] Logged out. Resetting auth state.');
-            await this.clearAuthState();
+            // Not paired / QR expired without scan -> cleanly stop, do NOT loop reconnect
             this.isInitializing = false;
-            this.status = 'DISCONNECTED';
+            this.reconnectAttempts = 0;
           }
         } else if (connection === 'open') {
           console.log('✅ [WhatsApp] Direct Multi-Device Session Connected successfully!');
@@ -156,6 +191,10 @@ export class WhatsAppSessionService {
       }
       this.connectedInfo = null;
       this.lastConnectedAt = null;
+      this.status = 'DISCONNECTED';
+      this.qrCodeString = null;
+      this.qrCodeDataUrl = null;
+      this.reconnectAttempts = 0;
     } catch (err) {
       console.error('[WhatsApp] Failed to clear auth state folder:', err);
     }
@@ -188,17 +227,15 @@ export class WhatsAppSessionService {
   }
 
   /**
-   * Explicitly triggers QR regeneration / re-initialization
+   * Explicitly triggers QR regeneration / re-initialization on admin request
    */
   static async requestQR() {
     if (this.status === 'CONNECTED') {
       return this.getStatus();
     }
 
-    if (!this.socket || this.status === 'DISCONNECTED') {
-      this.isInitializing = false;
-      await this.init();
-    }
+    this.isInitializing = false;
+    await this.init(true);
 
     return this.getStatus();
   }
@@ -218,16 +255,8 @@ export class WhatsAppSessionService {
     }
 
     await this.clearAuthState();
-    this.status = 'DISCONNECTED';
-    this.qrCodeString = null;
-    this.qrCodeDataUrl = null;
-    this.connectedInfo = null;
-    this.isInitializing = false;
 
-    // Immediately restart to generate fresh QR code for pairing
-    setTimeout(() => this.init(), 1000);
-
-    return { success: true, message: 'WhatsApp session disconnected. New QR code generating.' };
+    return { success: true, message: 'WhatsApp session disconnected successfully.' };
   }
 
   /**

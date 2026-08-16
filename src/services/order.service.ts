@@ -2,6 +2,7 @@ import { prisma } from '../config/prisma';
 import { emitOrderStatusUpdate, emitNewOrderToAdmin } from '../config/socket';
 import { ShippingService } from './shipping.service';
 import { NotificationService } from './notification.service';
+import { DbLoggerService } from './db-logger.service';
 import { CouponService } from './coupon.service';
 
 const db = prisma as any;
@@ -272,6 +273,17 @@ export class OrderService {
       );
     } catch {}
 
+    // Log to Journal
+    DbLoggerService.logOrder('ORDER_CREATED', order.id, {
+      orderNumber: order.orderNumber,
+      totalAmount: order.totalAmount,
+      shippingAmount: order.shippingAmount,
+      couponDiscount: order.couponDiscount,
+      couponCode: order.couponCode,
+      shippingName: order.shippingName,
+      paymentMethod: order.paymentMethod,
+    });
+
     return order;
   }
 
@@ -364,6 +376,15 @@ export class OrderService {
     } catch (err) {
       console.error('Failed to send order status update notification:', err);
     }
+
+    // Log to Journal
+    DbLoggerService.logOrder(newStatus === 'CANCELLED' ? 'ORDER_CANCELLED' : 'ORDER_STATUS_CHANGED', updatedOrder.id, {
+      orderNumber: updatedOrder.orderNumber,
+      previousStatus: existingOrder.status,
+      newStatus,
+      trackingNumber,
+      comment,
+    });
 
     return updatedOrder;
   }

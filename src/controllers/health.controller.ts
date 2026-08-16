@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/prisma';
+import { cacheService } from '../services/cache.service';
 
 let dynamicMaintenanceMode: {
   enabled: boolean;
@@ -31,14 +32,25 @@ export class HealthController {
       dbStatus = 'disconnected';
     }
 
+    // Test Redis connectivity and latency
+    const redisPing = await cacheService.ping();
+    const redisStats = cacheService.getStats();
+
     // Check if maintenance mode is active
     const isMaintenance = dynamicMaintenanceMode.enabled || process.env.MAINTENANCE_MODE === 'true';
 
     const memoryUsage = process.memoryUsage();
     const uptimeSeconds = Math.floor(process.uptime());
 
+    const isSystemHealthy = dbStatus === 'connected';
+    const status = isMaintenance 
+      ? 'maintenance' 
+      : isSystemHealthy 
+        ? (redisPing.ok ? 'healthy' : 'degraded_cache') 
+        : 'degraded';
+
     const healthData = {
-      status: isMaintenance ? 'maintenance' : dbStatus === 'connected' ? 'healthy' : 'degraded',
+      status,
       maintenance: isMaintenance,
       maintenanceMessage: isMaintenance ? dynamicMaintenanceMode.message : null,
       estimatedEndTime: isMaintenance ? dynamicMaintenanceMode.estimatedEndTime : null,
@@ -52,6 +64,13 @@ export class HealthController {
         database: {
           status: dbStatus,
           latencyMs: dbLatencyMs,
+        },
+        redis: {
+          status: redisPing.ok ? 'connected' : 'disconnected',
+          latencyMs: redisPing.latencyMs,
+          hits: redisStats.hits,
+          misses: redisStats.misses,
+          hitRatio: redisStats.hitRatio,
         },
       },
       system: {
@@ -84,7 +103,7 @@ export class HealthController {
 
     return res.status(200).json({
       success: true,
-      message: 'All systems operational',
+      message: redisPing.ok ? 'All systems operational' : 'Database operational, Redis cache degraded (fail-open active)',
       data: healthData,
     });
   }

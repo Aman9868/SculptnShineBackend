@@ -4,6 +4,7 @@ import { OrderService } from './order.service';
 import { emitOrderStatusUpdate } from '../config/socket';
 import { InvoiceService } from './invoice.service';
 import { NotificationService } from './notification.service';
+import { DbLoggerService } from './db-logger.service';
 
 const createError = (statusCode: number, message: string) => {
   const error: any = new Error(message);
@@ -41,6 +42,13 @@ export class PaymentService {
         amount: order.totalAmount,
         status: 'PENDING',
       },
+    });
+
+    DbLoggerService.logPayment('PAYMENT_INITIATED', order.id, payment.id, {
+      amount: order.totalAmount,
+      merchantTransactionId,
+      provider: 'PHONEPE',
+      orderNumber: order.orderNumber,
     });
 
     try {
@@ -95,7 +103,20 @@ export class PaymentService {
 
     const payment = await prisma.payment.findUnique({
       where: { merchantTransactionId },
-      include: { order: { include: { items: true } } },
+      include: {
+        order: {
+          include: {
+            items: true,
+            userProfile: {
+              include: {
+                user: {
+                  select: { id: true, email: true, firstName: true, lastName: true },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!payment) {
@@ -202,10 +223,30 @@ export class PaymentService {
         console.error('Failed to clear cart after payment:', cartErr);
       }
 
-      // Generate and send invoice asynchronously
-      InvoiceService.generateInvoice(payment.orderId)
-        .then(() => InvoiceService.sendInvoiceEmail(payment.orderId))
-        .catch((err) => console.error('[Invoice] Failed to generate/send invoice:', err));
+      const actorUser = payment.order?.userProfile?.user;
+      const customerFullName = actorUser ? `${actorUser.firstName} ${actorUser.lastName}`.trim() : payment.order?.shippingName;
+      const customerEmail = actorUser?.email || payment.order?.userProfile?.user?.email;
+
+      // Log to Journal
+      DbLoggerService.logPayment(
+        'PAYMENT_SUCCESS',
+        payment.orderId,
+        payment.id,
+        {
+          orderNumber: payment.order.orderNumber,
+          amount: payment.amount,
+          merchantTransactionId,
+          gatewayTransactionId: body.transactionId || body.data?.transactionId,
+          customerName: customerFullName,
+          userEmail: customerEmail,
+          shippingName: payment.order.shippingName,
+        },
+        'SUCCESS',
+        {
+          userId: actorUser?.id,
+          userEmail: customerEmail,
+        }
+      );
 
       return { success: true, message: 'Payment completed successfully', orderId: payment.orderId };
     } else {
@@ -225,6 +266,31 @@ export class PaymentService {
           },
         }),
       ]);
+
+      const actorUser = payment.order?.userProfile?.user;
+      const customerFullName = actorUser ? `${actorUser.firstName} ${actorUser.lastName}`.trim() : payment.order?.shippingName;
+      const customerEmail = actorUser?.email || payment.order?.userProfile?.user?.email;
+
+      // Log failure to Journal
+      DbLoggerService.logPayment(
+        'PAYMENT_FAILED',
+        payment.orderId,
+        payment.id,
+        {
+          orderNumber: payment.order.orderNumber,
+          amount: payment.amount,
+          merchantTransactionId,
+          response: body,
+          customerName: customerFullName,
+          userEmail: customerEmail,
+          shippingName: payment.order.shippingName,
+        },
+        'FAILED',
+        {
+          userId: actorUser?.id,
+          userEmail: customerEmail,
+        }
+      );
 
       // Restore stock on failed payment
       await OrderService.updateOrderStatus(payment.orderId, 'CANCELLED');

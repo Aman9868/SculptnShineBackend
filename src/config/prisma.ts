@@ -1,15 +1,20 @@
 import { Prisma, PrismaClient } from '@prisma/client';
-import { getRequestUserId } from './request-context';
+import { getRequestContext } from './request-context';
 
 const basePrisma = new PrismaClient();
 
 const writeAuditLog = async (action: string, entity: string, details?: Prisma.InputJsonValue) => {
   try {
-    await basePrisma.auditLog.create({
+    const ctx = getRequestContext();
+    await (basePrisma as any).auditLog.create({
       data: {
         action,
         entity,
-        userId: getRequestUserId(),
+        userId: ctx.userId,
+        userEmail: ctx.userEmail,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+        status: 'SUCCESS',
         details,
       },
     });

@@ -1,4 +1,5 @@
 import { prisma } from '../config/prisma';
+import { cacheService, CACHE_TTL, CACHE_PATTERNS } from './cache.service';
 
 const createError = (statusCode: number, message: string) => {
   const error: any = new Error(message);
@@ -7,6 +8,13 @@ const createError = (statusCode: number, message: string) => {
 };
 
 export class CategoryService {
+  private static async invalidateCategoryCache() {
+    await cacheService.invalidatePatterns([
+      CACHE_PATTERNS.CATEGORIES,
+      CACHE_PATTERNS.PRODUCTS,
+    ]);
+  }
+
   static async createCategory(data: any) {
     // Check if slug is unique
     const existing = await prisma.productCategory.findUnique({
@@ -19,104 +27,118 @@ export class CategoryService {
     const category = await prisma.productCategory.create({
       data,
     });
+
+    await this.invalidateCategoryCache();
     return category;
   }
 
   static async getAllCategories(page: number = 1, limit: number = 10, search?: string, status?: string) {
-    const skip = (page - 1) * limit;
-    const where: any = {};
+    const cacheKey = `categories:list:${page}:${limit}:${search || 'all'}:${status || 'all'}`;
 
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ];
-    }
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.LONG, async () => {
+      const skip = (page - 1) * limit;
+      const where: any = {};
 
-    if (status) {
-      where.status = status;
-    }
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ];
+      }
 
-    const [categories, total] = await Promise.all([
-      prisma.productCategory.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.productCategory.count({ where }),
-    ]);
+      if (status) {
+        where.status = status;
+      }
 
-    return {
-      categories,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+      const [categories, total] = await Promise.all([
+        prisma.productCategory.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.productCategory.count({ where }),
+      ]);
+
+      return {
+        categories,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    });
   }
 
   static async getCategoryById(idOrSlug: string) {
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
-    
-    const category = await prisma.productCategory.findUnique({
-      where: isUUID ? { id: idOrSlug } : { slug: idOrSlug },
-      include: { subcategories: true },
+    const cacheKey = `categories:id:${idOrSlug}`;
+
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.LONG, async () => {
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+      
+      const category = await prisma.productCategory.findUnique({
+        where: isUUID ? { id: idOrSlug } : { slug: idOrSlug },
+        include: { subcategories: true },
+      });
+      if (!category) {
+        throw createError(404, 'Category not found');
+      }
+      return category;
     });
-    if (!category) {
-      throw createError(404, 'Category not found');
-    }
-    return category;
   }
 
   static async getCategoryFilters(idOrSlug: string) {
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
-    const category = await prisma.productCategory.findUnique({
-      where: isUUID ? { id: idOrSlug } : { slug: idOrSlug },
-      select: { id: true }
-    });
+    const cacheKey = `categories:filters:${idOrSlug}`;
 
-    if (!category) {
-      throw createError(404, 'Category not found');
-    }
-
-    // Get all variants for products in this category to calculate counts
-    const variants = await prisma.productVariant.findMany({
-      where: { product: { categoryId: category.id } },
-      select: { flavor: true, weight: true }
-    });
-
-    // Get all products to calculate preference, brand, and rating counts
-    const products = await prisma.product.findMany({
-      where: { categoryId: category.id, status: 'ACTIVE' },
-      select: { preference: true, averageRating: true, reviewCount: true, brand: { select: { name: true } } }
-    });
-
-    const getCounts = (items: any[], key: string) => {
-      const counts: Record<string, number> = {};
-      items.forEach(item => {
-        const val = key.includes('.') ? item[key.split('.')[0]]?.[key.split('.')[1]] : item[key];
-        if (val) {
-          counts[val] = (counts[val] || 0) + 1;
-        }
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.MEDIUM, async () => {
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+      const category = await prisma.productCategory.findUnique({
+        where: isUUID ? { id: idOrSlug } : { slug: idOrSlug },
+        select: { id: true }
       });
-      return Object.entries(counts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
-    };
 
-    const flavors = getCounts(variants, 'flavor');
-    const weights = getCounts(variants, 'weight');
-    const preferences = getCounts(products, 'preference');
-    const brands = getCounts(products, 'brand.name');
+      if (!category) {
+        throw createError(404, 'Category not found');
+      }
 
-    const ratedProducts = products.filter(p => p.reviewCount > 0 && p.averageRating > 0);
-    const ratings = [4, 3, 2, 1].map(stars => ({
-      stars,
-      count: ratedProducts.filter(p => p.averageRating >= stars).length
-    })).filter(r => r.count > 0);
+      // Get all variants for products in this category to calculate counts
+      const variants = await prisma.productVariant.findMany({
+        where: { product: { categoryId: category.id } },
+        select: { flavor: true, weight: true }
+      });
 
-    return { flavors, weights, preferences, brands, ratings };
+      // Get all products to calculate preference, brand, and rating counts
+      const products = await prisma.product.findMany({
+        where: { categoryId: category.id, status: 'ACTIVE' },
+        select: { preference: true, averageRating: true, reviewCount: true, brand: { select: { name: true } } }
+      });
+
+      const getCounts = (items: any[], key: string) => {
+        const counts: Record<string, number> = {};
+        items.forEach(item => {
+          const val = key.includes('.') ? item[key.split('.')[0]]?.[key.split('.')[1]] : item[key];
+          if (val) {
+            counts[val] = (counts[val] || 0) + 1;
+          }
+        });
+        return Object.entries(counts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+      };
+
+      const flavors = getCounts(variants, 'flavor');
+      const weights = getCounts(variants, 'weight');
+      const preferences = getCounts(products, 'preference');
+      const brands = getCounts(products, 'brand.name');
+
+      const ratedProducts = products.filter(p => p.reviewCount > 0 && p.averageRating > 0);
+      const ratings = [4, 3, 2, 1].map(stars => ({
+        stars,
+        count: ratedProducts.filter(p => p.averageRating >= stars).length
+      })).filter(r => r.count > 0);
+
+      return { flavors, weights, preferences, brands, ratings };
+    });
   }
 
   static async updateCategory(id: string, data: any) {
@@ -138,8 +160,10 @@ export class CategoryService {
         where: { id },
         data,
       });
+      await this.invalidateCategoryCache();
       return category;
-    } catch (error) {
+    } catch (error: any) {
+      if (error.statusCode) throw error;
       throw createError(404, 'Category not found');
     }
   }
@@ -149,6 +173,7 @@ export class CategoryService {
       await prisma.productCategory.delete({
         where: { id },
       });
+      await this.invalidateCategoryCache();
       return { message: 'Category deleted successfully' };
     } catch (error) {
       throw createError(404, 'Category not found');
@@ -156,17 +181,21 @@ export class CategoryService {
   }
 
   static async getCategoryKPIs() {
-    const [totalCategories, activeCategories, inactiveCategories] = await Promise.all([
-      prisma.productCategory.count(),
-      prisma.productCategory.count({ where: { status: 'ACTIVE' } }),
-      prisma.productCategory.count({ where: { status: 'INACTIVE' } }),
-    ]);
+    const cacheKey = 'categories:kpis';
 
-    return {
-      totalCategories,
-      activeCategories,
-      inactiveCategories,
-    };
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.SHORT, async () => {
+      const [totalCategories, activeCategories, inactiveCategories] = await Promise.all([
+        prisma.productCategory.count(),
+        prisma.productCategory.count({ where: { status: 'ACTIVE' } }),
+        prisma.productCategory.count({ where: { status: 'INACTIVE' } }),
+      ]);
+
+      return {
+        totalCategories,
+        activeCategories,
+        inactiveCategories,
+      };
+    });
   }
 
   static async exportCategories() {
