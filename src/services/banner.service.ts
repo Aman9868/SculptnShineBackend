@@ -1,4 +1,5 @@
 import { prisma } from '../config/prisma';
+import { cacheService, CACHE_TTL, CACHE_PATTERNS } from './cache.service';
 
 const createError = (statusCode: number, message: string) => {
   const error: any = new Error(message);
@@ -7,6 +8,10 @@ const createError = (statusCode: number, message: string) => {
 };
 
 export class BannerService {
+  private static async invalidateBannerCache() {
+    await cacheService.delByPattern(CACHE_PATTERNS.BANNERS);
+  }
+
   static async getAllBanners(query: { search?: string; type?: string; status?: string; page?: number; limit?: number }) {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 20;
@@ -61,20 +66,24 @@ export class BannerService {
   }
 
   static async getBannerById(id: string) {
-    const banner = await prisma.banner.findUnique({ 
-      where: { id },
-      include: {
-        product: { select: { slug: true, title: true } },
-        category: { select: { slug: true, name: true } },
-        brand: { select: { slug: true, name: true } }
+    const cacheKey = `banners:id:${id}`;
+
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.LONG, async () => {
+      const banner = await prisma.banner.findUnique({ 
+        where: { id },
+        include: {
+          product: { select: { slug: true, title: true } },
+          category: { select: { slug: true, name: true } },
+          brand: { select: { slug: true, name: true } }
+        }
+      });
+
+      if (!banner) {
+        throw createError(404, 'Banner not found');
       }
+
+      return banner;
     });
-
-    if (!banner) {
-      throw createError(404, 'Banner not found');
-    }
-
-    return banner;
   }
 
   static async createBanner(data: {
@@ -112,7 +121,7 @@ export class BannerService {
       sortOrder = (maxOrder._max.sortOrder || 0) + 1;
     }
 
-    return await prisma.banner.create({
+    const banner = await prisma.banner.create({
       data: {
         title: data.title.trim(),
         subtitle: data.subtitle?.trim() || null,
@@ -131,6 +140,9 @@ export class BannerService {
         brandId: data.brandId || null,
       },
     });
+
+    await this.invalidateBannerCache();
+    return banner;
   }
 
   static async updateBanner(id: string, data: any) {
@@ -139,7 +151,7 @@ export class BannerService {
       throw createError(404, 'Banner not found');
     }
 
-    return await prisma.banner.update({
+    const updated = await prisma.banner.update({
       where: { id },
       data: {
         title: data.title !== undefined ? data.title.trim() : undefined,
@@ -159,6 +171,9 @@ export class BannerService {
         brandId: data.brandId !== undefined ? (data.brandId || null) : undefined,
       },
     });
+
+    await this.invalidateBannerCache();
+    return updated;
   }
 
   static async deleteBanner(id: string) {
@@ -168,6 +183,7 @@ export class BannerService {
     }
 
     await prisma.banner.delete({ where: { id } });
+    await this.invalidateBannerCache();
     return { success: true, message: `Banner '${existing.title}' deleted successfully` };
   }
 
@@ -179,7 +195,7 @@ export class BannerService {
       scheduled, 
       homeGeneralCount, 
       promoCount, 
-      categoryHeaderCount,
+      categoryHeaderCount, 
       brandHeaderCount,
       loginBgCount,
       signupBgCount,
@@ -205,37 +221,41 @@ export class BannerService {
       scheduled, 
       homeGeneralCount, 
       promoCount, 
-      categoryHeaderCount,
-      brandHeaderCount,
+      categoryHeaderCount, 
+      brandHeaderCount, 
       authBgCount: loginBgCount + signupBgCount,
       homeProductCount
     };
   }
 
   static async getPublicBanners(type?: string) {
-    const where: any = { status: 'ACTIVE' };
+    const cacheKey = `banners:public:${type || 'all'}`;
 
-    if (type) {
-      where.type = type;
-    }
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.LONG, async () => {
+      const where: any = { status: 'ACTIVE' };
 
-    // Filter out scheduled banners that are not yet active or have expired
-    const now = new Date();
-    where.OR = [
-      { startDate: null, endDate: null },
-      { startDate: { lte: now }, endDate: null },
-      { startDate: null, endDate: { gte: now } },
-      { startDate: { lte: now }, endDate: { gte: now } },
-    ];
-
-    return await prisma.banner.findMany({
-      where,
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
-      include: {
-        product: { select: { slug: true, title: true } },
-        category: { select: { slug: true, name: true } },
-        brand: { select: { slug: true, name: true } }
+      if (type) {
+        where.type = type;
       }
+
+      // Filter out scheduled banners that are not yet active or have expired
+      const now = new Date();
+      where.OR = [
+        { startDate: null, endDate: null },
+        { startDate: { lte: now }, endDate: null },
+        { startDate: null, endDate: { gte: now } },
+        { startDate: { lte: now }, endDate: { gte: now } },
+      ];
+
+      return await prisma.banner.findMany({
+        where,
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+        include: {
+          product: { select: { slug: true, title: true } },
+          category: { select: { slug: true, name: true } },
+          brand: { select: { slug: true, name: true } }
+        }
+      });
     });
   }
 }

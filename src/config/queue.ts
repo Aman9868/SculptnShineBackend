@@ -1,16 +1,9 @@
 import { Queue, Worker, QueueEvents } from 'bullmq';
-import Redis from 'ioredis';
-import dotenv from 'dotenv';
+import { createRedisClient } from './redis';
 
-dotenv.config();
-
-const redisOptions = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
+export const redisConnection = createRedisClient({
   maxRetriesPerRequest: null,
-};
-
-export const redisConnection = new Redis(redisOptions);
+});
 
 export const notificationQueue = new Queue('notificationQueue', {
   connection: redisConnection,

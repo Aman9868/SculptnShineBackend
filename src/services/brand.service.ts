@@ -1,4 +1,5 @@
 import { prisma } from '../config/prisma';
+import { cacheService, CACHE_TTL, CACHE_PATTERNS } from './cache.service';
 
 const createError = (statusCode: number, message: string) => {
   const error: any = new Error(message);
@@ -11,68 +12,82 @@ const generateSlug = (name: string) => {
 };
 
 export class BrandService {
+  private static async invalidateBrandCache() {
+    await cacheService.invalidatePatterns([
+      CACHE_PATTERNS.BRANDS,
+      CACHE_PATTERNS.PRODUCTS,
+    ]);
+  }
+
   static async getAllBrands(query: { search?: string; status?: string; page?: number; limit?: number }) {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 20;
-    const skip = (page - 1) * limit;
+    const cacheKey = `brands:list:${page}:${limit}:${query.search || 'all'}:${query.status || 'all'}`;
 
-    const where: any = {};
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.LONG, async () => {
+      const skip = (page - 1) * limit;
+      const where: any = {};
 
-    if (query.status) {
-      where.status = query.status;
-    }
+      if (query.status) {
+        where.status = query.status;
+      }
 
-    if (query.search) {
-      where.OR = [
-        { name: { contains: query.search, mode: 'insensitive' } },
-        { slug: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } },
-      ];
-    }
+      if (query.search) {
+        where.OR = [
+          { name: { contains: query.search, mode: 'insensitive' } },
+          { slug: { contains: query.search, mode: 'insensitive' } },
+          { description: { contains: query.search, mode: 'insensitive' } },
+        ];
+      }
 
-    const [brands, total] = await Promise.all([
-      prisma.productBrand.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { name: 'asc' },
-        include: {
-          _count: {
-            select: { products: true }
+      const [brands, total] = await Promise.all([
+        prisma.productBrand.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { name: 'asc' },
+          include: {
+            _count: {
+              select: { products: true }
+            }
           }
-        }
-      }),
-      prisma.productBrand.count({ where }),
-    ]);
+        }),
+        prisma.productBrand.count({ where }),
+      ]);
 
-    return {
-      brands,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+      return {
+        brands,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    });
   }
 
   static async getBrandById(id: string) {
-    const brand = await prisma.productBrand.findUnique({
-      where: { id },
-      include: {
-        products: {
-          take: 10,
-          select: { id: true, title: true, unitPrice: true, discountPercentage: true, gst: true, status: true, images: true }
-        },
-        _count: { select: { products: true } }
+    const cacheKey = `brands:id:${id}`;
+
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.LONG, async () => {
+      const brand = await prisma.productBrand.findUnique({
+        where: { id },
+        include: {
+          products: {
+            take: 10,
+            select: { id: true, title: true, unitPrice: true, discountPercentage: true, gst: true, status: true, images: true }
+          },
+          _count: { select: { products: true } }
+        }
+      });
+
+      if (!brand) {
+        throw createError(404, 'Product Brand not found');
       }
+
+      return brand;
     });
-
-    if (!brand) {
-      throw createError(404, 'Product Brand not found');
-    }
-
-    return brand;
   }
 
   static async findOrCreateBrandByName(name: string) {
@@ -97,6 +112,7 @@ export class BrandService {
           status: 'ACTIVE',
         }
       });
+      await this.invalidateBrandCache();
     }
 
     return brand;
@@ -126,7 +142,7 @@ export class BrandService {
       throw createError(400, `Brand with slug '${slug}' already exists`);
     }
 
-    return await prisma.productBrand.create({
+    const brand = await prisma.productBrand.create({
       data: {
         name: data.name.trim(),
         slug,
@@ -136,6 +152,9 @@ export class BrandService {
         status: data.status || 'ACTIVE',
       }
     });
+
+    await this.invalidateBrandCache();
+    return brand;
   }
 
   static async updateBrand(id: string, data: any) {
@@ -160,7 +179,7 @@ export class BrandService {
       }
     }
 
-    return await prisma.productBrand.update({
+    const updated = await prisma.productBrand.update({
       where: { id },
       data: {
         name: data.name ? data.name.trim() : undefined,
@@ -171,6 +190,9 @@ export class BrandService {
         status: data.status || undefined,
       }
     });
+
+    await this.invalidateBrandCache();
+    return updated;
   }
 
   static async deleteBrand(id: string) {
@@ -188,20 +210,25 @@ export class BrandService {
     }
 
     await prisma.productBrand.delete({ where: { id } });
+    await this.invalidateBrandCache();
     return { success: true, message: `Brand '${existing.name}' deleted successfully` };
   }
 
   static async getBrandKPIs() {
-    const [totalBrands, activeBrands, inactiveBrands] = await Promise.all([
-      prisma.productBrand.count(),
-      prisma.productBrand.count({ where: { status: 'ACTIVE' } }),
-      prisma.productBrand.count({ where: { status: 'INACTIVE' } }),
-    ]);
+    const cacheKey = 'brands:kpis';
 
-    return {
-      totalBrands,
-      activeBrands,
-      inactiveBrands,
-    };
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.SHORT, async () => {
+      const [totalBrands, activeBrands, inactiveBrands] = await Promise.all([
+        prisma.productBrand.count(),
+        prisma.productBrand.count({ where: { status: 'ACTIVE' } }),
+        prisma.productBrand.count({ where: { status: 'INACTIVE' } }),
+      ]);
+
+      return {
+        totalBrands,
+        activeBrands,
+        inactiveBrands,
+      };
+    });
   }
 }

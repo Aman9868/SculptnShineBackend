@@ -1,12 +1,12 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../config/prisma';
+import { cacheService, CACHE_TTL, CACHE_PATTERNS } from './cache.service';
 
 export class BusinessConfigService {
   static async getConfig() {
-    // We only have one business config, so we can just fetch the first one
-    const config = await prisma.businessConfig.findFirst();
-    return config;
+    const cacheKey = 'businessConfig:all';
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.DAY, async () => {
+      return await prisma.businessConfig.findFirst();
+    });
   }
 
   static async upsertConfig(data: Partial<{
@@ -20,8 +20,10 @@ export class BusinessConfigService {
     youtubeUrl?: string;
   }>) {
     const existing = await prisma.businessConfig.findFirst();
+    let result;
+
     if (existing) {
-      return await prisma.businessConfig.update({
+      result = await prisma.businessConfig.update({
         where: { id: existing.id },
         data: {
           brandName: data.brandName !== undefined ? data.brandName : existing.brandName,
@@ -35,7 +37,7 @@ export class BusinessConfigService {
         },
       });
     } else {
-      return await prisma.businessConfig.create({
+      result = await prisma.businessConfig.create({
         data: {
           brandName: data.brandName || 'Sculpt N Shine',
           address: data.address || '',
@@ -48,5 +50,8 @@ export class BusinessConfigService {
         },
       });
     }
+
+    await cacheService.delByPattern(CACHE_PATTERNS.BUSINESS_CONFIG);
+    return result;
   }
 }

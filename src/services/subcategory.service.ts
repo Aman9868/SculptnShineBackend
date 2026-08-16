@@ -1,4 +1,5 @@
 import { prisma } from '../config/prisma';
+import { cacheService, CACHE_TTL, CACHE_PATTERNS } from './cache.service';
 
 const createError = (statusCode: number, message: string) => {
   const error: any = new Error(message);
@@ -7,62 +8,78 @@ const createError = (statusCode: number, message: string) => {
 };
 
 export class SubcategoryService {
+  private static async invalidateSubcategoryCache() {
+    await cacheService.invalidatePatterns([
+      CACHE_PATTERNS.SUBCATEGORIES,
+      CACHE_PATTERNS.CATEGORIES,
+      CACHE_PATTERNS.PRODUCTS,
+    ]);
+  }
+
   static async getAllSubcategories(categoryId?: string, page = 1, limit = 10, search?: string) {
-    const skip = (page - 1) * limit;
-    const where: any = {};
+    const cacheKey = `subcategories:list:${categoryId || 'all'}:${page}:${limit}:${search || 'all'}`;
 
-    if (categoryId) {
-      where.categoryId = categoryId;
-    }
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.LONG, async () => {
+      const skip = (page - 1) * limit;
+      const where: any = {};
 
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ];
-    }
+      if (categoryId) {
+        where.categoryId = categoryId;
+      }
 
-    const [subcategories, total] = await Promise.all([
-      prisma.productSubcategory.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ];
+      }
+
+      const [subcategories, total] = await Promise.all([
+        prisma.productSubcategory.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            category: {
+              select: { name: true, slug: true }
+            }
+          }
+        }),
+        prisma.productSubcategory.count({ where }),
+      ]);
+
+      return {
+        subcategories,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    });
+  }
+
+  static async getSubcategoryById(id: string) {
+    const cacheKey = `subcategories:id:${id}`;
+
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.LONG, async () => {
+      const subcategory = await prisma.productSubcategory.findUnique({
+        where: { id },
         include: {
           category: {
             select: { name: true, slug: true }
           }
         }
-      }),
-      prisma.productSubcategory.count({ where }),
-    ]);
+      });
 
-    return {
-      subcategories,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
-
-  static async getSubcategoryById(id: string) {
-    const subcategory = await prisma.productSubcategory.findUnique({
-      where: { id },
-      include: {
-        category: {
-          select: { name: true, slug: true }
-        }
+      if (!subcategory) {
+        throw createError(404, 'Subcategory not found');
       }
+
+      return subcategory;
     });
-
-    if (!subcategory) {
-      throw createError(404, 'Subcategory not found');
-    }
-
-    return subcategory;
   }
 
   static async createSubcategory(data: any) {
@@ -79,6 +96,8 @@ export class SubcategoryService {
     const subcategory = await prisma.productSubcategory.create({
       data,
     });
+
+    await this.invalidateSubcategoryCache();
     return subcategory;
   }
 
@@ -101,6 +120,8 @@ export class SubcategoryService {
         where: { id },
         data,
       });
+
+      await this.invalidateSubcategoryCache();
       return subcategory;
     } catch (error) {
       throw createError(404, 'Subcategory not found');
@@ -112,6 +133,8 @@ export class SubcategoryService {
       await prisma.productSubcategory.delete({
         where: { id },
       });
+
+      await this.invalidateSubcategoryCache();
       return { message: 'Subcategory deleted successfully' };
     } catch (error) {
       throw createError(404, 'Subcategory not found');
@@ -119,22 +142,26 @@ export class SubcategoryService {
   }
 
   static async getSubcategoryKPIs(categoryId?: string) {
-    const where: any = {};
-    if (categoryId) {
-      where.categoryId = categoryId;
-    }
+    const cacheKey = `subcategories:kpis:${categoryId || 'all'}`;
 
-    const [totalSubcategories, activeSubcategories, inactiveSubcategories] = await Promise.all([
-      prisma.productSubcategory.count({ where }),
-      prisma.productSubcategory.count({ where: { ...where, status: 'ACTIVE' } }),
-      prisma.productSubcategory.count({ where: { ...where, status: 'INACTIVE' } }),
-    ]);
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.SHORT, async () => {
+      const where: any = {};
+      if (categoryId) {
+        where.categoryId = categoryId;
+      }
 
-    return {
-      totalSubcategories,
-      activeSubcategories,
-      inactiveSubcategories,
-    };
+      const [totalSubcategories, activeSubcategories, inactiveSubcategories] = await Promise.all([
+        prisma.productSubcategory.count({ where }),
+        prisma.productSubcategory.count({ where: { ...where, status: 'ACTIVE' } }),
+        prisma.productSubcategory.count({ where: { ...where, status: 'INACTIVE' } }),
+      ]);
+
+      return {
+        totalSubcategories,
+        activeSubcategories,
+        inactiveSubcategories,
+      };
+    });
   }
 
   static async exportSubcategories(categoryId?: string) {
