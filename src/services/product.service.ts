@@ -37,7 +37,7 @@ export class ProductService {
   }) {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
-    const cacheKey = `products:list:${JSON.stringify(query)}`;
+    const cacheKey = `products:v3:list:${JSON.stringify(query)}`;
 
     return await cacheService.getOrSet(cacheKey, CACHE_TTL.DEFAULT, async () => {
       const skip = (page - 1) * limit;
@@ -47,8 +47,23 @@ export class ProductService {
       if (query.categorySlug) where.category = { slug: query.categorySlug };
       if (query.subcategoryId) where.subcategoryId = query.subcategoryId;
       if (query.subcategorySlug) where.subcategory = { slug: query.subcategorySlug };
-      if (query.brandId) where.brandId = query.brandId;
-      if (query.status) where.status = query.status;
+      
+      const requestedStatus = query.status || 'ACTIVE';
+      if (requestedStatus !== 'ALL') {
+        where.status = requestedStatus;
+      }
+      
+      if (where.status === 'ACTIVE') {
+        where.AND = [
+          ...(where.AND || []),
+          {
+            OR: [
+              { unitPrice: { gt: 0 } },
+              { variants: { some: { unitPrice: { gt: 0 } } } }
+            ]
+          }
+        ];
+      }
       if (query.brand) {
         where.brand = { name: { contains: query.brand, mode: 'insensitive' } };
       }
@@ -113,28 +128,26 @@ export class ProductService {
         }
       }
 
-      const orderBy: any = {};
+      let orderBy: any = { createdAt: 'desc' };
       if (query.sort) {
         switch (query.sort) {
           case 'price_asc':
-            orderBy.unitPrice = 'asc';
+            orderBy = { unitPrice: 'asc' };
             break;
           case 'price_desc':
-            orderBy.unitPrice = 'desc';
+            orderBy = { unitPrice: 'desc' };
             break;
           case 'rating_desc':
-            orderBy.averageRating = 'desc';
+            orderBy = [{ averageRating: 'desc' }, { reviewCount: 'desc' }];
             break;
           case 'popular':
-            orderBy.totalSold = 'desc';
+            orderBy = [{ reviewCount: 'desc' }, { averageRating: 'desc' }, { createdAt: 'desc' }];
             break;
           case 'newest':
           default:
-            orderBy.createdAt = 'desc';
+            orderBy = { createdAt: 'desc' };
             break;
         }
-      } else {
-        orderBy.createdAt = 'desc';
       }
 
       const [products, total] = await Promise.all([
@@ -172,12 +185,22 @@ export class ProductService {
   }
 
   static async getFilters(query: { search?: string, status?: string }) {
-    const cacheKey = `products:filters:${JSON.stringify(query)}`;
+    const cacheKey = `products:v3:filters:${JSON.stringify(query)}`;
 
     return await cacheService.getOrSet(cacheKey, CACHE_TTL.MEDIUM, async () => {
       const where: any = {
         status: query.status || 'ACTIVE'
       };
+      if (where.status === 'ACTIVE') {
+        where.AND = [
+          {
+            OR: [
+              { unitPrice: { gt: 0 } },
+              { variants: { some: { unitPrice: { gt: 0 } } } }
+            ]
+          }
+        ];
+      }
       if (query.search) {
         const keywords = query.search.trim().split(/\s+/).filter(k => k.length > 0);
         if (keywords.length > 0) {
