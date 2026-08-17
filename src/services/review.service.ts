@@ -36,28 +36,68 @@ export const reviewService = {
     isVerifiedPurchase?: boolean;
     isAdminCreated?: boolean;
   }) => {
-    // If admin is creating the review, auto-approve it.
-    // Otherwise, you could default to PENDING for moderation, but let's default to APPROVED for now based on typical small e-commerce setups unless strict moderation is requested.
     const status: ReviewStatus = data.isAdminCreated ? 'APPROVED' : 'APPROVED';
 
-    const review = await prisma.productReview.create({
-      data: {
-        productId: data.productId,
-        userProfileId: data.userProfileId || null,
-        rating: data.rating,
-        title: data.title,
-        comment: data.comment,
-        images: data.images || [],
-        isVerifiedPurchase: data.isVerifiedPurchase || false,
-        status
+    let review;
+    if (data.userProfileId) {
+      const existing = await prisma.productReview.findFirst({
+        where: {
+          productId: data.productId,
+          userProfileId: data.userProfileId
+        }
+      });
+      if (existing) {
+        review = await prisma.productReview.update({
+          where: { id: existing.id },
+          data: {
+            rating: data.rating,
+            title: data.title,
+            comment: data.comment,
+            images: data.images !== undefined ? data.images : existing.images,
+            isVerifiedPurchase: data.isVerifiedPurchase ?? existing.isVerifiedPurchase,
+            status
+          }
+        });
       }
-    });
+    }
+
+    if (!review) {
+      review = await prisma.productReview.create({
+        data: {
+          productId: data.productId,
+          userProfileId: data.userProfileId || null,
+          rating: data.rating,
+          title: data.title,
+          comment: data.comment,
+          images: data.images || [],
+          isVerifiedPurchase: data.isVerifiedPurchase || false,
+          status
+        }
+      });
+    }
 
     if (status === 'APPROVED') {
       await updateProductRatingStats(data.productId);
     }
 
     return review;
+  },
+
+  getMyProductReview: async (productId: string, userProfileId: string) => {
+    return prisma.productReview.findFirst({
+      where: {
+        productId,
+        userProfileId
+      }
+    });
+  },
+
+  getMyReviewedProductIds: async (userProfileId: string) => {
+    const reviews = await prisma.productReview.findMany({
+      where: { userProfileId },
+      select: { productId: true }
+    });
+    return reviews.map((r) => r.productId);
   },
 
   getProductReviews: async (productId: string, filters?: { status?: ReviewStatus, limit?: number }) => {
@@ -101,7 +141,10 @@ export const reviewService = {
       include: {
         product: { select: { id: true, title: true, images: true, slug: true } },
         userProfile: {
-          select: { user: { select: { firstName: true, lastName: true, email: true } } }
+          select: {
+            profileImage: true,
+            user: { select: { firstName: true, lastName: true, email: true } }
+          }
         }
       }
     });

@@ -14,6 +14,7 @@ router.get('/inventory-status', authenticate, authorizeRoles('ADMIN'), ProductCo
 router.get('/sample-template', authenticate, authorizeRoles('ADMIN'), ProductController.getSampleTemplate);
 router.get('/export-excel', authenticate, authorizeRoles('ADMIN'), ProductController.exportProductsExcel);
 router.get('/filters', ProductController.getFilters);
+router.get('/best-sellers', ProductController.getBestSellers);
 router.get('/', ProductController.getAllProducts);
 router.get('/:id', ProductController.getProductById);
 

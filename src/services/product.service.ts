@@ -1142,5 +1142,133 @@ export class ProductService {
       }
     ];
   }
+
+  /**
+   * Industry-Standard Best Sellers Service
+   * Calculates rank by sales quantity from paid orders with rating/active backfill and Redis caching.
+   */
+  static async getBestSellers(limit: number = 8, categoryId?: string) {
+    const safeLimit = Math.max(1, Math.min(Number(limit) || 8, 30));
+    const cacheKey = `products:best-sellers:${safeLimit}:${categoryId || 'all'}`;
+
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.DEFAULT, async () => {
+      // 1. Fetch IDs of paid / completed non-cancelled orders
+      const paidOrders = await prisma.order.findMany({
+        where: {
+          OR: [
+            { paymentStatus: 'COMPLETED' },
+            { status: 'PAID' },
+            { status: 'PROCESSING' },
+            { status: 'SHIPPED' },
+            { status: 'DELIVERED' }
+          ],
+          NOT: { status: 'CANCELLED' }
+        },
+        select: { id: true },
+        take: 2000
+      });
+
+      const paidOrderIds = paidOrders.map(o => o.id);
+      const bestSellers: any[] = [];
+
+      if (paidOrderIds.length > 0) {
+        const topSales = await prisma.orderItem.groupBy({
+          by: ['productId'],
+          _sum: { quantity: true },
+          where: {
+            orderId: { in: paidOrderIds }
+          },
+          orderBy: {
+            _sum: {
+              quantity: 'desc'
+            }
+          },
+          take: safeLimit
+        });
+
+        const topProductIds = topSales.map(item => item.productId).filter((id): id is string => Boolean(id));
+
+      if (topProductIds.length > 0) {
+        const fetchedProducts = await prisma.product.findMany({
+          where: {
+            id: { in: topProductIds },
+            status: 'ACTIVE',
+            OR: [
+              { unitPrice: { gt: 0 } },
+              { variants: { some: { unitPrice: { gt: 0 } } } }
+            ],
+            ...(categoryId ? { categoryId } : {})
+          },
+          include: {
+            category: { select: { id: true, name: true, slug: true } },
+            subcategory: { select: { id: true, name: true, slug: true } },
+            brand: { select: { id: true, name: true, logo: true } },
+            variants: {
+              where: { stock: { gte: 0 } },
+              orderBy: [{ isDefault: 'desc' }, { unitPrice: 'asc' }]
+            }
+          }
+        });
+
+        // Preserve ranking order of highest quantity sold
+        const productMap = new Map(fetchedProducts.map(p => [p.id, p]));
+        for (const s of topSales) {
+          if (!s.productId) continue;
+          const p = productMap.get(s.productId);
+          if (p) {
+            bestSellers.push({
+              ...p,
+              totalSold: s._sum.quantity || 0,
+              isBestSeller: true
+            });
+          }
+        }
+      }
+    }
+
+      // 2. If fewer than safeLimit, backfill with highest rated active products with price > 0
+      if (bestSellers.length < safeLimit) {
+        const existingIds = bestSellers.map(p => p.id);
+        const needed = safeLimit - bestSellers.length;
+
+        const backfillProducts = await prisma.product.findMany({
+          where: {
+            id: { notIn: existingIds },
+            status: 'ACTIVE',
+            OR: [
+              { unitPrice: { gt: 0 } },
+              { variants: { some: { unitPrice: { gt: 0 } } } }
+            ],
+            ...(categoryId ? { categoryId } : {})
+          },
+          take: needed,
+          orderBy: [
+            { averageRating: 'desc' },
+            { reviewCount: 'desc' },
+            { createdAt: 'desc' }
+          ],
+          include: {
+            category: { select: { id: true, name: true, slug: true } },
+            subcategory: { select: { id: true, name: true, slug: true } },
+            brand: { select: { id: true, name: true, logo: true } },
+            variants: {
+              where: { stock: { gte: 0 } },
+              orderBy: [{ isDefault: 'desc' }, { unitPrice: 'asc' }]
+            }
+          }
+        });
+
+        for (const p of backfillProducts) {
+          bestSellers.push({
+            ...p,
+            totalSold: 0,
+            isBestSeller: true
+          });
+        }
+      }
+
+      return bestSellers;
+    });
+  }
 }
 
