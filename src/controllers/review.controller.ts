@@ -26,6 +26,48 @@ export const reviewController = {
       return res.status(500).json({ success: false, message: 'Failed to check eligibility' });
     }
   },
+
+  getMyReview: async (req: Request, res: Response) => {
+    try {
+      const productId = req.params.productId as string;
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
+
+      const profile = await prisma.userProfile.findUnique({ where: { userId } });
+      if (!profile) {
+        return res.status(404).json({ success: false, message: 'User profile not found' });
+      }
+
+      const review = await reviewService.getMyProductReview(productId, profile.id);
+      return res.status(200).json({ success: true, data: review });
+    } catch (error: any) {
+      console.error('Error getting my review:', error);
+      return res.status(500).json({ success: false, message: 'Failed to get review' });
+    }
+  },
+
+  getMyReviewedProductIds: async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
+
+      const profile = await prisma.userProfile.findUnique({ where: { userId } });
+      if (!profile) {
+        return res.status(200).json({ success: true, data: [] });
+      }
+
+      const productIds = await reviewService.getMyReviewedProductIds(profile.id);
+      return res.status(200).json({ success: true, data: productIds });
+    } catch (error: any) {
+      console.error('Error getting my reviewed product ids:', error);
+      return res.status(500).json({ success: false, message: 'Failed to get reviewed product ids' });
+    }
+  },
   // Public / User Routes
   getProductReviews: async (req: Request, res: Response) => {
     try {
@@ -45,12 +87,10 @@ export const reviewController = {
 
   getFeaturedReviews: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = parseInt(req.query.limit as string) || 12;
       const reviews = await reviewService.getAllReviewsAdmin({
         status: 'APPROVED',
-        rating: 5,
-        limit,
-      } as any);
+      });
       res.status(200).json({ success: true, data: reviews });
     } catch (error) {
       next(error);

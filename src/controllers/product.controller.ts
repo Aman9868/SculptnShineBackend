@@ -27,6 +27,21 @@ export class ProductController {
     }
   }
 
+  static async getBestSellers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const limit = req.query.limit ? Number(req.query.limit) : 8;
+      const categoryId = req.query.categoryId as string | undefined;
+      const products = await ProductService.getBestSellers(limit, categoryId);
+      res.status(200).json({
+        success: true,
+        message: 'Best seller products fetched successfully',
+        data: products,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getProductById(req: Request, res: Response, next: NextFunction) {
     try {
       const product = await ProductService.getProductById(req.params.id as string);

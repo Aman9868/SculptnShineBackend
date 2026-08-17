@@ -15,6 +15,12 @@ router.get('/product/:productId', reviewController.getProductReviews);
 // GET /api/reviews/eligibility/:productId
 router.get('/eligibility/:productId', authenticate, reviewController.checkEligibility);
 
+// GET /api/reviews/my-reviewed-product-ids
+router.get('/my-reviewed-product-ids', authenticate, reviewController.getMyReviewedProductIds);
+
+// GET /api/reviews/my/:productId
+router.get('/my/:productId', authenticate, reviewController.getMyReview);
+
 // POST /api/reviews
 router.post('/', authenticate, reviewController.addReview);
 
