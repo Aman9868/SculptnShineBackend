@@ -231,4 +231,76 @@ export class BrandService {
       };
     });
   }
+
+  static async getTopSellingBrands(limit: number = 8) {
+    const cacheKey = `brands:top-selling:${limit}`;
+
+    return await cacheService.getOrSet(cacheKey, CACHE_TTL.LONG, async () => {
+      // Get active brands that have products, ordered by product count
+      const brands = await prisma.productBrand.findMany({
+        where: {
+          status: 'ACTIVE',
+          products: { some: { status: 'ACTIVE' } },
+        },
+        take: limit,
+        orderBy: {
+          products: { _count: 'desc' },
+        },
+        include: {
+          _count: { select: { products: true } },
+          products: {
+            where: { status: 'ACTIVE' },
+            take: 4,
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              images: true,
+              unitPrice: true,
+              discountPercentage: true,
+              variants: {
+                take: 1,
+                orderBy: { isDefault: 'desc' },
+                select: {
+                  unitPrice: true,
+                  discountPercentage: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return brands.map((brand) => {
+        // Calculate the max discount across all fetched products and their variants
+        let maxDiscount = 0;
+        brand.products.forEach((p) => {
+          if (p.discountPercentage && p.discountPercentage > maxDiscount) {
+            maxDiscount = p.discountPercentage;
+          }
+          p.variants?.forEach((v) => {
+            if (v.discountPercentage && v.discountPercentage > maxDiscount) {
+              maxDiscount = v.discountPercentage;
+            }
+          });
+        });
+
+        return {
+          id: brand.id,
+          name: brand.name,
+          slug: brand.slug,
+          logo: brand.logo,
+          productCount: brand._count.products,
+          maxDiscount: Math.round(maxDiscount),
+          products: brand.products.map((p) => ({
+            id: p.id,
+            title: p.title,
+            slug: p.slug,
+            image: p.images?.[0] || null,
+          })),
+        };
+      });
+    });
+  }
 }

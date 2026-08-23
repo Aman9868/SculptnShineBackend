@@ -5,6 +5,7 @@ import { authenticate, authorizeRoles } from '../middlewares/auth.middleware';
 const router = Router();
 
 // Public routes (no auth needed)
+router.get('/top-selling', BrandController.getTopSellingBrands);
 router.get('/', BrandController.getAllBrands);
 router.get('/:id', BrandController.getBrandById);
 
