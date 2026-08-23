@@ -15,6 +15,20 @@ export class BrandController {
     }
   }
 
+  static async getTopSellingBrands(req: Request, res: Response, next: NextFunction) {
+    try {
+      const limit = Number(req.query.limit) || 8;
+      const result = await BrandService.getTopSellingBrands(limit);
+      res.status(200).json({
+        success: true,
+        message: 'Top selling brands fetched successfully',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getBrandKPIs(req: Request, res: Response, next: NextFunction) {
     try {
       const kpis = await BrandService.getBrandKPIs();
