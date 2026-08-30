@@ -48,7 +48,8 @@ export class CategoryController {
 
   static async getCategoryFilters(req: Request, res: Response, next: NextFunction) {
     try {
-      const filters = await CategoryService.getCategoryFilters(req.params.id as string);
+      const subcategorySlug = req.query.subcategorySlug as string | undefined;
+      const filters = await CategoryService.getCategoryFilters(req.params.id as string, subcategorySlug);
       res.status(200).json({
         success: true,
         message: 'Category filters fetched successfully',
