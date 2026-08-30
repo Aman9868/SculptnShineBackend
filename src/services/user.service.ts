@@ -186,6 +186,7 @@ export class UserService {
                 },
               },
             },
+            integrations: true,
           },
         },
       },
@@ -209,6 +210,7 @@ export class UserService {
       emailNotifications: user.profile?.emailNotifications ?? true,
       smsNotifications: user.profile?.smsNotifications ?? false,
       whatsappNotifications: user.profile?.whatsappNotifications ?? false,
+      integrations: user.profile?.integrations || [],
       profile: undefined
     };
 

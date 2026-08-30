@@ -4,6 +4,7 @@ import { ShippingService } from './shipping.service';
 import { NotificationService } from './notification.service';
 import { DbLoggerService } from './db-logger.service';
 import { CouponService } from './coupon.service';
+import { ReplenishmentService } from './replenishment.service';
 
 const db = prisma as any;
 
@@ -385,6 +386,14 @@ export class OrderService {
       trackingNumber,
       comment,
     });
+    
+    // AI Predictive Replenishment
+    if (newStatus === 'DELIVERED' && previousStatus !== 'DELIVERED') {
+      // Async so it doesn't block the request
+      ReplenishmentService.generateSchedulesForOrder(updatedOrder.id).catch((err) => {
+        console.error('[AI] Failed to generate replenishment schedules:', err);
+      });
+    }
 
     return updatedOrder;
   }

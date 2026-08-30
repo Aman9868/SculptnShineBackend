@@ -62,3 +62,61 @@ export const initMaintenanceScheduler = async () => {
     console.error('[BullMQ] Failed to register maintenance scheduler:', error.message);
   }
 };
+
+/**
+ * Replenishment Queue for AI Predictive Replenishment
+ */
+export const replenishmentQueue = new Queue('replenishmentQueue', {
+  connection: redisConnection,
+});
+
+export const initReplenishmentScheduler = async () => {
+  try {
+    // Register repeatable BullMQ job running daily at 10:00 AM (Cron: 0 10 * * *)
+    if (typeof (replenishmentQueue as any).upsertJobScheduler === 'function') {
+      await (replenishmentQueue as any).upsertJobScheduler(
+        'daily_replenishment_check',
+        { pattern: '0 10 * * *' },
+        {
+          name: 'checkDueReplenishments',
+          data: {},
+        }
+      );
+      
+      await (replenishmentQueue as any).upsertJobScheduler(
+        'daily_google_fit_sync',
+        { pattern: '0 2 * * *' }, // Sync at 2:00 AM
+        {
+          name: 'syncGoogleFitWorkouts',
+          data: {},
+        }
+      );
+    } else {
+      await (replenishmentQueue as any).add(
+        'checkDueReplenishments',
+        {},
+        {
+          repeat: { pattern: '0 10 * * *' },
+          jobId: 'daily_replenishment_check',
+          removeOnComplete: 10,
+          removeOnFail: 20,
+        }
+      );
+      
+      await (replenishmentQueue as any).add(
+        'syncGoogleFitWorkouts',
+        {},
+        {
+          repeat: { pattern: '0 2 * * *' }, // Sync at 2:00 AM
+          jobId: 'daily_google_fit_sync',
+          removeOnComplete: 10,
+          removeOnFail: 20,
+        }
+      );
+    }
+
+    console.log(`[BullMQ] 🕒 Registered repeatable jobs for AI Predictive Replenishment`);
+  } catch (error: any) {
+    console.error('[BullMQ] Failed to register replenishment scheduler:', error.message);
+  }
+};

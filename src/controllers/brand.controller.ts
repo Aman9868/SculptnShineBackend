@@ -18,7 +18,8 @@ export class BrandController {
   static async getTopSellingBrands(req: Request, res: Response, next: NextFunction) {
     try {
       const limit = Number(req.query.limit) || 8;
-      const result = await BrandService.getTopSellingBrands(limit);
+      const categorySlug = req.query.categorySlug as string | undefined;
+      const result = await BrandService.getTopSellingBrands(limit, categorySlug);
       res.status(200).json({
         success: true,
         message: 'Top selling brands fetched successfully',

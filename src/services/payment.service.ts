@@ -67,6 +67,17 @@ export class PaymentService {
         });
       }
 
+      if (paymentResult.isTestMode) {
+        // Automatically trigger simulated callback internally to process payment & clear cart
+        setTimeout(() => {
+          PaymentService.handlePhonePeCallback({
+            merchantTransactionId,
+            code: 'PAYMENT_SUCCESS',
+            transactionId: `SIMULATED_${Date.now()}`
+          }).catch(err => console.error('Internal simulated callback failed:', err));
+        }, 500);
+      }
+
       return {
         isTestMode: paymentResult.isTestMode,
         merchantTransactionId,
