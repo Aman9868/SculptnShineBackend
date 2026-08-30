@@ -89,8 +89,8 @@ export class CategoryService {
     });
   }
 
-  static async getCategoryFilters(idOrSlug: string) {
-    const cacheKey = `categories:filters:${idOrSlug}`;
+  static async getCategoryFilters(idOrSlug: string, subcategorySlug?: string) {
+    const cacheKey = `categories:filters:${idOrSlug}${subcategorySlug ? `:${subcategorySlug}` : ''}`;
 
     return await cacheService.getOrSet(cacheKey, CACHE_TTL.MEDIUM, async () => {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
@@ -103,15 +103,21 @@ export class CategoryService {
         throw createError(404, 'Category not found');
       }
 
-      // Get all variants for products in this category to calculate counts
+      // Build the product where clause based on whether we are filtering by subcategory
+      const productWhere: any = { categoryId: category.id, status: 'ACTIVE' };
+      if (subcategorySlug) {
+        productWhere.subcategory = { slug: subcategorySlug };
+      }
+
+      // Get all variants for products in this context to calculate counts
       const variants = await prisma.productVariant.findMany({
-        where: { product: { categoryId: category.id } },
+        where: { product: productWhere },
         select: { flavor: true, weight: true }
       });
 
       // Get all products to calculate preference, brand, and rating counts
       const products = await prisma.product.findMany({
-        where: { categoryId: category.id, status: 'ACTIVE' },
+        where: productWhere,
         select: { preference: true, averageRating: true, reviewCount: true, brand: { select: { name: true } } }
       });
 
