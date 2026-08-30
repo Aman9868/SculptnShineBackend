@@ -90,4 +90,34 @@ export class WhatsAppController {
       });
     }
   }
+
+  /**
+   * Sends a quotation link to a specified phone number
+   */
+  static async sendQuotation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { phone, fileUrl } = req.body;
+
+      if (!phone || !fileUrl) {
+        return res.status(400).json({
+          success: false,
+          message: 'Phone number and file URL are required',
+        });
+      }
+
+      const message = `*SculptnShine B2B Quotation* 📄\n\nHere is the quotation you requested. You can download it directly here:\n${fileUrl}\n\nPlease let us know if you have any questions!`;
+      
+      const result = await WhatsAppSessionService.sendMessage(phone, message);
+      return res.status(200).json({
+        success: true,
+        message: 'WhatsApp quotation sent successfully',
+        data: result,
+      });
+    } catch (error: any) {
+      return res.status(500).json({
+        success: false,
+        message: error?.message || 'Failed to send WhatsApp quotation',
+      });
+    }
+  }
 }

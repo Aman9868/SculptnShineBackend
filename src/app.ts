@@ -29,15 +29,18 @@ import notificationRoutes from './routes/notification.routes';
 import whatsappRoutes from './routes/whatsapp.routes';
 import healthRoutes from './routes/health.routes';
 import emailConfigRoutes from './routes/email-config.routes';
+import replenishmentRoutes from './routes/replenishment.routes';
 import { couponRoutes } from './routes/coupon.routes';
 import cacheRoutes from './routes/cache.routes';
 import resourceMetricsRoutes from './routes/resource-metrics.routes';
+import { integrationRoutes } from './routes/integration.routes';
 import { HealthController } from './controllers/health.controller';
 import { requestContextMiddleware } from './config/request-context';
 import { WhatsAppSessionService } from './services/whatsapp-session.service';
-import { initMaintenanceScheduler } from './config/queue';
+import { initMaintenanceScheduler, initReplenishmentScheduler } from './config/queue';
 import './workers/notification.worker'; // Initialize BullMQ notification worker
 import './workers/maintenance.worker'; // Initialize BullMQ maintenance worker
+import './workers/replenishment.worker'; // Initialize BullMQ replenishment worker
 
 // Initialize WhatsApp direct multi-device session
 WhatsAppSessionService.init().catch(err => {
@@ -46,6 +49,9 @@ WhatsAppSessionService.init().catch(err => {
 
 // Initialize automated BullMQ background log retention scheduler (Runs daily at 03:00 AM)
 initMaintenanceScheduler();
+
+// Initialize automated BullMQ replenishment scheduler (Runs daily at 10:00 AM)
+initReplenishmentScheduler();
 
 
 const app = express();
@@ -93,6 +99,8 @@ app.use('/invoices', express.static(invoicesPath, {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/integrations', integrationRoutes);
+app.use('/api/replenishments', replenishmentRoutes);
 app.use('/api/audit-logs', auditRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/brands', brandRoutes);

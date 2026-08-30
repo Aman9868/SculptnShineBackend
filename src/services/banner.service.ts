@@ -48,6 +48,7 @@ export class BannerService {
         include: {
           product: { select: { slug: true, title: true } },
           category: { select: { slug: true, name: true } },
+          subcategory: { select: { slug: true, name: true } },
           brand: { select: { slug: true, name: true } }
         }
       }),
@@ -74,6 +75,7 @@ export class BannerService {
         include: {
           product: { select: { slug: true, title: true } },
           category: { select: { slug: true, name: true } },
+          subcategory: { select: { slug: true, name: true } },
           brand: { select: { slug: true, name: true } }
         }
       });
@@ -101,6 +103,7 @@ export class BannerService {
     startDate?: string;
     endDate?: string;
     categoryId?: string;
+    subcategoryId?: string;
     productId?: string;
     brandId?: string;
   }) {
@@ -138,6 +141,7 @@ export class BannerService {
         startDate: data.startDate ? new Date(data.startDate) : null,
         endDate: data.endDate ? new Date(data.endDate) : null,
         categoryId: data.categoryId || null,
+        subcategoryId: data.subcategoryId || null,
         productId: data.productId || null,
         brandId: data.brandId || null,
       },
@@ -170,6 +174,7 @@ export class BannerService {
         startDate: data.startDate !== undefined ? (data.startDate ? new Date(data.startDate) : null) : undefined,
         endDate: data.endDate !== undefined ? (data.endDate ? new Date(data.endDate) : null) : undefined,
         categoryId: data.categoryId !== undefined ? (data.categoryId || null) : undefined,
+        subcategoryId: data.subcategoryId !== undefined ? (data.subcategoryId || null) : undefined,
         productId: data.productId !== undefined ? (data.productId || null) : undefined,
         brandId: data.brandId !== undefined ? (data.brandId || null) : undefined,
       },
@@ -231,14 +236,26 @@ export class BannerService {
     };
   }
 
-  static async getPublicBanners(type?: string) {
-    const cacheKey = `banners:public:${type || 'all'}`;
+  static async getPublicBanners(type?: string, categorySlug?: string, subcategorySlug?: string, onlySubcategories?: boolean) {
+    const cacheKey = `banners:public:${type || 'all'}:${categorySlug || 'all'}:${subcategorySlug || 'all'}:${onlySubcategories || false}`;
 
     return await cacheService.getOrSet(cacheKey, CACHE_TTL.LONG, async () => {
       const where: any = { status: 'ACTIVE' };
 
       if (type) {
         where.type = type;
+      }
+      if (categorySlug) {
+        where.category = { slug: categorySlug };
+      }
+      
+      if (onlySubcategories) {
+        where.subcategoryId = { not: null };
+      } else if (subcategorySlug) {
+        where.subcategory = { slug: subcategorySlug };
+      } else if (categorySlug) {
+        // Fetch ALL banners for this category (both main category and its subcategories)
+        // by NOT filtering out subcategoryId
       }
 
       // Filter out scheduled banners that are not yet active or have expired
@@ -256,6 +273,7 @@ export class BannerService {
         include: {
           product: { select: { slug: true, title: true } },
           category: { select: { slug: true, name: true } },
+          subcategory: { select: { slug: true, name: true } },
           brand: { select: { slug: true, name: true } }
         }
       });

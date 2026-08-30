@@ -2,6 +2,7 @@ import { prisma } from '../config/prisma';
 import { BrandService } from './brand.service';
 import { cacheService, CACHE_TTL, CACHE_PATTERNS } from './cache.service';
 import { DbLoggerService } from './db-logger.service';
+import { AISyncService } from './ai-sync.service';
 
 const createError = (statusCode: number, message: string) => {
   const error: any = new Error(message);
@@ -444,6 +445,8 @@ export class ProductService {
       brandId: product.brandId,
     });
 
+    await AISyncService.publishProductEvent('PRODUCT_CREATED', product.id);
+
     return product;
   }
 
@@ -617,6 +620,8 @@ export class ProductService {
       stockDifference,
     });
 
+    await AISyncService.publishProductEvent('PRODUCT_UPDATED', id);
+
     return updatedProduct;
   }
 
@@ -626,6 +631,7 @@ export class ProductService {
       await this.invalidateProductCache();
 
       DbLoggerService.logProduct('PRODUCT_DELETED', id, { productId: id });
+      await AISyncService.publishProductEvent('PRODUCT_DELETED', id);
 
       return { message: 'Product deleted successfully' };
     } catch (error) {
@@ -1001,6 +1007,10 @@ export class ProductService {
       updated: results.updated,
       failed: results.failed,
     });
+
+    if (results.created > 0 || results.updated > 0) {
+      await AISyncService.publishProductEvent('BULK_SYNC_REQUIRED', '', { count: results.created + results.updated });
+    }
 
     return results;
   }

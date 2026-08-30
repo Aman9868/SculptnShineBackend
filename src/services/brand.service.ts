@@ -232,16 +232,22 @@ export class BrandService {
     });
   }
 
-  static async getTopSellingBrands(limit: number = 8) {
-    const cacheKey = `brands:top-selling:${limit}`;
+  static async getTopSellingBrands(limit: number = 8, categorySlug?: string) {
+    const cacheKey = `brands:top-selling:${limit}:${categorySlug || 'all'}`;
 
     return await cacheService.getOrSet(cacheKey, CACHE_TTL.LONG, async () => {
+      const whereClause: any = {
+        status: 'ACTIVE',
+        products: { some: { status: 'ACTIVE' } },
+      };
+
+      if (categorySlug) {
+        whereClause.products.some.category = { slug: categorySlug };
+      }
+
       // Get active brands that have products, ordered by product count
       const brands = await prisma.productBrand.findMany({
-        where: {
-          status: 'ACTIVE',
-          products: { some: { status: 'ACTIVE' } },
-        },
+        where: whereClause,
         take: limit,
         orderBy: {
           products: { _count: 'desc' },

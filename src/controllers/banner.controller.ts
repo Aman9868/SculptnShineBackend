@@ -78,7 +78,11 @@ export class BannerController {
 
   static async getPublicBanners(req: Request, res: Response, next: NextFunction) {
     try {
-      const banners = await BannerService.getPublicBanners(req.query.type as string | undefined);
+      const type = req.query.type as string | undefined;
+      const categoryId = req.query.categoryId as string | undefined;
+      const subcategoryId = req.query.subcategoryId as string | undefined;
+      const onlySubcategories = req.query.onlySubcategories === 'true';
+      const banners = await BannerService.getPublicBanners(type, categoryId, subcategoryId, onlySubcategories);
       res.status(200).json({
         success: true,
         message: 'Public banners fetched successfully',

@@ -24,31 +24,545 @@ model User {
 }
 
 model UserProfile {
-  id           String    @id @default(uuid())
-  userId       String    @unique
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  profileImage String?
-  phone        String?
-  dateOfBirth  DateTime?
-  gender       Gender?
-  bio          String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  
-  webPushNotifications    Boolean @default(true)
-  emailNotifications      Boolean @default(true)
-  smsNotifications        Boolean @default(false)
-  whatsappNotifications   Boolean @default(false)
+  id                    String                  @id @default(uuid())
+  userId                String                  @unique
+  profileImage          String?
+  phone                 String?
+  dateOfBirth           DateTime?
+  gender                Gender?
+  bio                   String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  webPushNotifications  Boolean                 @default(true)
+  emailNotifications    Boolean                 @default(true)
+  smsNotifications      Boolean                 @default(false)
+  whatsappNotifications Boolean                 @default(false)
+  skinType              String?
+  workoutDaysPerWeek    Int?                    @default(3)
+  addresses             Address[]
+  cart                  Cart?
+  couponUsages          CouponUsage[]
+  integrations          ExternalIntegration[]
+  notifications         Notification[]
+  orders                Order[]
+  reviews               ProductReview[]
+  pushSubscriptions     PushSubscription[]
+  replenishments        ReplenishmentSchedule[]
+  supportTickets        SupportTicket[]
+  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wishlistItems         WishlistItem[]
+}
 
-  cart         Cart?
-  orders       Order[]
-  addresses    Address[]
-  wishlistItems WishlistItem[]
-  supportTickets SupportTicket[]
-  reviews      ProductReview[]
-  notifications Notification[]
-  pushSubscriptions PushSubscription[]
-  couponUsages CouponUsage[]
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  userId    String?
+  details   Json?
+  createdAt DateTime @default(now())
+  entityId  String?
+  ipAddress String?
+  status    String   @default("SUCCESS")
+  userAgent String?
+  userEmail String?
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([entity, createdAt])
+  @@index([action, createdAt])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Address {
+  id                   String      @id @default(uuid())
+  userProfileId        String
+  flatHouse            String
+  areaStreet           String
+  landmark             String?
+  pincode              String
+  townCity             String
+  state                String
+  deliveryInstructions String?
+  isDefault            Boolean     @default(false)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  userProfile          UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+}
+
+model ProductCategory {
+  id            String               @id @default(uuid())
+  name          String
+  slug          String               @unique
+  description   String?
+  image         String?
+  status        CategoryStatus       @default(ACTIVE)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  banners       Banner[]
+  products      Product[]
+  subcategories ProductSubcategory[]
+}
+
+model ProductSubcategory {
+  id          String          @id @default(uuid())
+  name        String
+  slug        String          @unique
+  description String?
+  image       String?
+  status      CategoryStatus  @default(ACTIVE)
+  categoryId  String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  banners     Banner[]
+  products    Product[]
+  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+model ProductBrand {
+  id          String         @id @default(uuid())
+  name        String         @unique
+  slug        String         @unique
+  logo        String?
+  description String?
+  website     String?
+  status      CategoryStatus @default(ACTIVE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  banners     Banner[]
+  products    Product[]
+}
+
+model Product {
+  id                 String                  @id @default(uuid())
+  title              String
+  slug               String                  @unique
+  description        String?
+  brandId            String?
+  preference         Preference?             @default(NOT_APPLICABLE)
+  unitPrice          Float
+  discountPercentage Float?                  @default(0)
+  gst                Float                   @default(18)
+  expiryDate         DateTime?
+  sku                String                  @unique
+  stock              Int                     @default(0)
+  lowStockAlert      Int                     @default(5)
+  images             String[]
+  videos             String[]                @default([])
+  status             ProductStatus           @default(ACTIVE)
+  categoryId         String?
+  subcategoryId      String?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  averageRating      Float                   @default(0)
+  reviewCount        Int                     @default(0)
+  banners            Banner[]
+  cartItems          CartItem[]
+  inventoryLogs      InventoryLog[]
+  orderItems         OrderItem[]
+  brand              ProductBrand?           @relation(fields: [brandId], references: [id])
+  category           ProductCategory?        @relation(fields: [categoryId], references: [id])
+  subcategory        ProductSubcategory?     @relation(fields: [subcategoryId], references: [id])
+  reviews            ProductReview[]
+  variants           ProductVariant[]
+  replenishments     ReplenishmentSchedule[]
+  supportTickets     SupportTicket[]
+  wishlistItems      WishlistItem[]
+}
+
+model ProductVariant {
+  id                 String                  @id @default(uuid())
+  productId          String
+  title              String
+  sku                String                  @unique
+  flavor             String?
+  weight             String?
+  unitPrice          Float
+  discountPercentage Float?                  @default(0)
+  gst                Float                   @default(18)
+  expiryDate         DateTime?
+  stock              Int                     @default(0)
+  images             String[]                @default([])
+  isDefault          Boolean                 @default(false)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  cartItems          CartItem[]
+  orderItems         OrderItem[]
+  product            Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
+  replenishments     ReplenishmentSchedule[]
+}
+
+model Cart {
+  id            String      @id @default(uuid())
+  userProfileId String      @unique
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  items         CartItem[]
+}
+
+model CartItem {
+  id        String          @id @default(uuid())
+  cartId    String
+  productId String
+  variantId String?
+  quantity  Int             @default(1)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  cart      Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+}
+
+model Order {
+  id              String               @id @default(uuid())
+  orderNumber     String               @unique
+  userProfileId   String
+  subTotalAmount  Float                @default(0)
+  shippingAmount  Float                @default(0)
+  totalAmount     Float
+  status          OrderStatus          @default(PENDING_PAYMENT)
+  paymentStatus   PaymentStatus        @default(PENDING)
+  paymentMethod   PaymentProvider      @default(PHONEPE)
+  shippingName    String
+  shippingPhone   String
+  shippingAddress String
+  shippingCity    String
+  shippingState   String
+  shippingPincode String
+  trackingNumber  String?
+  notes           String?
+  invoiceUrl      String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  couponCode      String?
+  couponDiscount  Float                @default(0)
+  couponId        String?
+  couponUsages    CouponUsage[]
+  coupon          Coupon?              @relation(fields: [couponId], references: [id])
+  userProfile     UserProfile          @relation(fields: [userProfileId], references: [id])
+  items           OrderItem[]
+  statusHistory   OrderStatusHistory[]
+  payments        Payment[]
+  supportTickets  SupportTicket[]
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  orderId   String
+  status    OrderStatus
+  comment   String?
+  createdAt DateTime    @default(now())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model OrderItem {
+  id                 String          @id @default(uuid())
+  orderId            String
+  productId          String?
+  variantId          String?
+  productName        String
+  productSku         String
+  unitPrice          Float
+  discountPercentage Float
+  gst                Float
+  quantity           Int
+  createdAt          DateTime        @default(now())
+  order              Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product            Product?        @relation(fields: [productId], references: [id])
+  variant            ProductVariant? @relation(fields: [variantId], references: [id])
+}
+
+model Payment {
+  id                    String          @id @default(uuid())
+  orderId               String
+  merchantTransactionId String          @unique
+  gatewayTransactionId  String?
+  provider              PaymentProvider @default(PHONEPE)
+  amount                Float
+  status                PaymentStatus   @default(PENDING)
+  responsePayload       Json?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  order                 Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model InventoryLog {
+  id        String   @id @default(uuid())
+  productId String
+  change    Int
+  type      String
+  reason    String?
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Banner {
+  id            String              @id @default(uuid())
+  title         String
+  subtitle      String?
+  image         String
+  video         String?
+  link          String?
+  ctaText       String?
+  type          BannerType          @default(HOME_GENERAL)
+  targetType    BannerTargetType    @default(NONE)
+  status        BannerStatus        @default(ACTIVE)
+  sortOrder     Int                 @default(0)
+  startDate     DateTime?
+  endDate       DateTime?
+  productId     String?
+  categoryId    String?
+  brandId       String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  mobileImage   String?
+  subcategoryId String?
+  brand         ProductBrand?       @relation(fields: [brandId], references: [id])
+  category      ProductCategory?    @relation(fields: [categoryId], references: [id])
+  product       Product?            @relation(fields: [productId], references: [id])
+  subcategory   ProductSubcategory? @relation(fields: [subcategoryId], references: [id])
+}
+
+model WishlistItem {
+  id            String      @id @default(uuid())
+  userProfileId String
+  productId     String
+  createdAt     DateTime    @default(now())
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([userProfileId, productId])
+}
+
+model BusinessConfig {
+  id           String   @id @default(uuid())
+  brandName    String
+  address      String
+  gstNumber    String
+  supportEmail String?
+  supportPhone String?
+  instagramUrl String?
+  facebookUrl  String?
+  youtubeUrl   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model EmailConfig {
+  id        String   @id @default(uuid())
+  host      String
+  port      Int
+  secure    Boolean  @default(true)
+  user      String
+  password  String
+  fromName  String?
+  fromEmail String?
+  isEnabled Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Policy {
+  id        String     @id @default(uuid())
+  type      PolicyType @unique
+  title     String
+  content   String
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model ShippingRule {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  states    String[] @default([])
+  charge    Float
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StoreSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model SupportTicket {
+  id            String          @id @default(uuid())
+  ticketNumber  String          @unique
+  userProfileId String
+  orderId       String?
+  productId     String?
+  category      TicketCategory
+  priority      TicketPriority  @default(MEDIUM)
+  status        TicketStatus    @default(OPEN)
+  subject       String
+  description   String
+  attachments   String[]        @default([])
+  adminResponse String?
+  resolvedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  order         Order?          @relation(fields: [orderId], references: [id])
+  product       Product?        @relation(fields: [productId], references: [id])
+  userProfile   UserProfile     @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  messages      TicketMessage[]
+}
+
+model TicketMessage {
+  id          String        @id @default(uuid())
+  ticketId    String
+  senderType  SenderType
+  senderId    String
+  message     String
+  attachments String[]      @default([])
+  createdAt   DateTime      @default(now())
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+}
+
+model ProductReview {
+  id                 String       @id @default(uuid())
+  productId          String
+  userProfileId      String?
+  rating             Int
+  title              String?
+  comment            String?
+  images             String[]     @default([])
+  isVerifiedPurchase Boolean      @default(false)
+  status             ReviewStatus @default(APPROVED)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  product            Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userProfile        UserProfile? @relation(fields: [userProfileId], references: [id])
+}
+
+model SupportInfo {
+  id             String   @id @default(uuid())
+  type           String   @default("GENERAL")
+  email          String?
+  mobileNumber   String?
+  whatsappNumber String?
+  address        String?
+  operatingHours String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Guide {
+  id        String   @id @default(uuid())
+  title     String
+  slug      String   @unique
+  category  String
+  image     String
+  videoUrl  String?
+  content   String
+  readTime  String
+  status    Boolean  @default(true)
+  author    String   @default("Admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id            String           @id @default(uuid())
+  userProfileId String
+  title         String
+  message       String
+  type          NotificationType @default(SYSTEM)
+  link          String?
+  isRead        Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  userProfile   UserProfile      @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
+  id            String      @id @default(uuid())
+  userProfileId String
+  endpoint      String      @unique
+  p256dh        String
+  auth          String
+  userAgent     String?
+  createdAt     DateTime    @default(now())
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+}
+
+model Coupon {
+  id                    String             @id @default(uuid())
+  code                  String             @unique
+  title                 String
+  description           String?
+  discountType          CouponDiscountType @default(PERCENTAGE)
+  discountValue         Float
+  maxDiscountAmount     Float?
+  minOrderAmount        Float?             @default(0)
+  scopeType             CouponScopeType    @default(GENERAL)
+  applicableProductIds  String[]           @default([])
+  applicableCategoryIds String[]           @default([])
+  applicableBrandIds    String[]           @default([])
+  startDate             DateTime           @default(now())
+  endDate               DateTime
+  usageLimit            Int?
+  usageLimitPerUser     Int                @default(1)
+  usedCount             Int                @default(0)
+  isActive              Boolean            @default(true)
+  isPublic              Boolean            @default(true)
+  badgeText             String?
+  bannerText            String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  usages                CouponUsage[]
+  orders                Order[]
+}
+
+model CouponUsage {
+  id             String      @id @default(uuid())
+  couponId       String
+  userProfileId  String
+  orderId        String?
+  discountAmount Float
+  createdAt      DateTime    @default(now())
+  coupon         Coupon      @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  order          Order?      @relation(fields: [orderId], references: [id])
+  userProfile    UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+
+  @@index([couponId, userProfileId])
+}
+
+model ReplenishmentSchedule {
+  id                  String          @id @default(uuid())
+  userProfileId       String
+  productId           String?
+  variantId           String?
+  orderId             String?
+  servingsRemaining   Float
+  estimatedRunOutDate DateTime
+  lastNotifiedAt      DateTime?
+  notificationStatus  String          @default("PENDING")
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  product             Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userProfile         UserProfile     @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  variant             ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+}
+
+model ExternalIntegration {
+  id            String      @id @default(uuid())
+  userProfileId String
+  provider      String
+  accessToken   String
+  refreshToken  String
+  expiresAt     DateTime
+  isActive      Boolean     @default(true)
+  lastSyncedAt  DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([userProfileId, provider])
 }
 
 enum Role {
@@ -68,73 +582,9 @@ enum Gender {
   PREFER_NOT_TO_SAY
 }
 
-model AuditLog {
-  id        String   @id @default(uuid())
-  action    String   // e.g., "ORDER_CREATED", "PAYMENT_SUCCESS", "PRODUCT_UPDATED", "CATALOG_SEARCH"
-  entity    String   // e.g., "Order", "Payment", "Product", "Category", "Brand", "User", "Auth", "CatalogSearch"
-  entityId  String?  // The specific ID of the entity affected
-  userId    String?  // The user who performed the action
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userEmail String?  // Cached snapshot of user email
-  ipAddress String?  // Client IP
-  userAgent String?  // Client user agent / device
-  status    String   @default("SUCCESS") // SUCCESS, FAILED, WARNING, INFO
-  details   Json?    // Structured JSON metadata / diffs / payload
-  createdAt DateTime @default(now())
-
-  @@index([entity, createdAt])
-  @@index([action, createdAt])
-  @@index([userId])
-  @@index([createdAt])
-}
-
-model Address {
-  id                   String   @id @default(uuid())
-  userProfileId        String
-  userProfile          UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
-  flatHouse            String   // Flat, House no., Building, Company, Apartment
-  areaStreet           String   // Area, Street, Sector, Village
-  landmark             String?
-  pincode              String
-  townCity             String
-  state                String
-  deliveryInstructions String?
-  isDefault            Boolean  @default(false)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-}
-
 enum CategoryStatus {
   ACTIVE
   INACTIVE
-}
-
-model ProductCategory {
-  id            String               @id @default(uuid())
-  name          String
-  slug          String               @unique
-  description   String?
-  image         String?
-  status        CategoryStatus       @default(ACTIVE)
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
-  subcategories ProductSubcategory[]
-  products      Product[]
-  banners       Banner[]
-}
-
-model ProductSubcategory {
-  id          String          @id @default(uuid())
-  name        String
-  slug        String          @unique
-  description String?
-  image       String?
-  status      CategoryStatus  @default(ACTIVE)
-  categoryId  String
-  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  products    Product[]
 }
 
 enum OrderStatus {
@@ -174,182 +624,6 @@ enum Preference {
   NOT_APPLICABLE
 }
 
-model ProductBrand {
-  id          String         @id @default(uuid())
-  name        String         @unique
-  slug        String         @unique
-  logo        String?
-  description String?
-  website     String?
-  status      CategoryStatus @default(ACTIVE)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  products    Product[]
-  banners     Banner[]
-}
-
-model Product {
-  id              String              @id @default(uuid())
-  title           String
-  slug            String              @unique
-  description     String?
-  brandId         String?
-  brand           ProductBrand?       @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  preference      Preference?         @default(NOT_APPLICABLE)
-  unitPrice       Float
-  discountPercentage Float?         @default(0)
-  gst             Float             @default(18)
-  expiryDate      DateTime?
-  sku             String            @unique
-  stock           Int               @default(0)
-  lowStockAlert   Int               @default(5)
-  images          String[]
-  videos          String[]          @default([])
-  status          ProductStatus     @default(ACTIVE)
-  categoryId      String?
-  category        ProductCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  subcategoryId   String?
-  subcategory     ProductSubcategory? @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  variants        ProductVariant[]
-  cartItems       CartItem[]
-  orderItems      OrderItem[]
-  inventoryLogs   InventoryLog[]
-  wishlistItems   WishlistItem[]
-  supportTickets  SupportTicket[]
-  reviews         ProductReview[]
-  averageRating   Float             @default(0)
-  reviewCount     Int               @default(0)
-  banners         Banner[]
-}
-
-model ProductVariant {
-  id            String      @id @default(uuid())
-  productId     String
-  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  title         String
-  sku           String      @unique
-  flavor        String?
-  weight        String?
-  unitPrice     Float
-  discountPercentage Float?    @default(0)
-  gst           Float          @default(18)
-  expiryDate    DateTime?
-  stock         Int            @default(0)
-  images        String[]       @default([])
-  isDefault     Boolean        @default(false)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  cartItems     CartItem[]
-  orderItems    OrderItem[]
-}
-
-model Cart {
-  id        String     @id @default(uuid())
-  userProfileId String     @unique
-  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
-  items     CartItem[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-}
-
-model CartItem {
-  id        String          @id @default(uuid())
-  cartId    String
-  cart      Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variantId String?
-  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
-  quantity  Int             @default(1)
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-}
-
-model Order {
-  id              String          @id @default(uuid())
-  orderNumber     String          @unique
-  userProfileId   String
-  userProfile     UserProfile     @relation(fields: [userProfileId], references: [id])
-  subTotalAmount  Float           @default(0)
-  shippingAmount  Float           @default(0)
-  totalAmount     Float
-  status          OrderStatus     @default(PENDING_PAYMENT)
-  paymentStatus   PaymentStatus   @default(PENDING)
-  paymentMethod   PaymentProvider @default(PHONEPE)
-  shippingName    String
-  shippingPhone   String
-  shippingAddress String
-  shippingCity    String
-  shippingState   String
-  shippingPincode String
-  trackingNumber  String?
-  notes           String?
-  invoiceUrl      String?
-  couponCode      String?
-  couponDiscount  Float           @default(0)
-  couponId        String?
-  coupon          Coupon?         @relation(fields: [couponId], references: [id], onDelete: SetNull)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  items           OrderItem[]
-  payments        Payment[]
-  statusHistory   OrderStatusHistory[]
-  supportTickets  SupportTicket[]
-  couponUsages    CouponUsage[]
-}
-
-model OrderStatusHistory {
-  id        String      @id @default(uuid())
-  orderId   String
-  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  status    OrderStatus
-  comment   String?
-  createdAt DateTime    @default(now())
-}
-
-model OrderItem {
-  id                 String          @id @default(uuid())
-  orderId            String
-  order              Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId          String?
-  product            Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
-  variantId          String?
-  variant            ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
-  productName        String
-  productSku         String
-  unitPrice          Float
-  discountPercentage Float
-  gst                Float
-  quantity           Int
-  createdAt          DateTime        @default(now())
-}
-
-model Payment {
-  id                    String          @id @default(uuid())
-  orderId               String
-  order                 Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  merchantTransactionId String          @unique
-  gatewayTransactionId  String?
-  provider              PaymentProvider @default(PHONEPE)
-  amount                Float
-  status                PaymentStatus   @default(PENDING)
-  responsePayload       Json?
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
-}
-
-model InventoryLog {
-  id        String   @id @default(uuid())
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  change    Int
-  type      String   // e.g. "ORDER_DEDUCTION", "RESTOCK", "ORDER_CANCELLED"
-  reason    String?
-  createdAt DateTime @default(now())
-}
-
 enum BannerType {
   HOME_GENERAL
   HOME_PRODUCT
@@ -366,78 +640,13 @@ enum BannerTargetType {
   BRAND
   EXTERNAL_LINK
   NONE
+  SUBCATEGORY
 }
 
 enum BannerStatus {
   ACTIVE
   INACTIVE
   SCHEDULED
-}
-
-model Banner {
-  id         String       @id @default(uuid())
-  title      String
-  subtitle   String?
-  image      String
-  mobileImage String?
-  video      String?
-  link       String?
-  ctaText    String?
-  type       BannerType       @default(HOME_GENERAL)
-  targetType BannerTargetType @default(NONE)
-  status     BannerStatus     @default(ACTIVE)
-  sortOrder  Int              @default(0)
-  startDate  DateTime?
-  endDate    DateTime?
-  
-  productId  String?
-  product    Product?         @relation(fields: [productId], references: [id])
-  categoryId String?
-  category   ProductCategory? @relation(fields: [categoryId], references: [id])
-  brandId    String?
-  brand      ProductBrand?    @relation(fields: [brandId], references: [id])
-
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-}
-
-model WishlistItem {
-  id            String      @id @default(uuid())
-  userProfileId String
-  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
-  productId     String
-  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  createdAt     DateTime    @default(now())
-
-  @@unique([userProfileId, productId])
-}
-
-model BusinessConfig {
-  id           String   @id @default(uuid())
-  brandName    String
-  address      String
-  gstNumber    String
-  supportEmail           String?
-  supportPhone           String?
-  instagramUrl           String?
-  facebookUrl            String?
-  youtubeUrl             String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model EmailConfig {
-  id        String   @id @default(uuid())
-  host      String
-  port      Int
-  secure    Boolean  @default(true)
-  user      String
-  password  String
-  fromName  String?
-  fromEmail String?
-  isEnabled Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 enum PolicyType {
@@ -448,34 +657,6 @@ enum PolicyType {
   CANCELLATION_POLICY
   REFUND_POLICY
   COOKIE_POLICY
-}
-
-model Policy {
-  id        String     @id @default(uuid())
-  type      PolicyType @unique
-  title     String
-  content   String     @db.Text
-  isActive  Boolean    @default(true)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-}
-
-model ShippingRule {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  states      String[] @default([])
-  charge      Float
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model StoreSetting {
-  id          String   @id @default(uuid())
-  key         String   @unique
-  value       String
-  description String?
-  updatedAt   DateTime @updatedAt
 }
 
 enum TicketCategory {
@@ -513,110 +694,10 @@ enum ReviewStatus {
   REJECTED
 }
 
-model SupportTicket {
-  id              String         @id @default(uuid())
-  ticketNumber    String         @unique
-  userProfileId   String
-  userProfile     UserProfile    @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
-  orderId         String?
-  order           Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  productId       String?
-  product         Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
-  category        TicketCategory
-  priority        TicketPriority @default(MEDIUM)
-  status          TicketStatus   @default(OPEN)
-  subject         String
-  description     String         @db.Text
-  attachments     String[]       @default([])
-  adminResponse   String?        @db.Text
-  resolvedAt      DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  messages        TicketMessage[]
-}
-
-model TicketMessage {
-  id              String         @id @default(uuid())
-  ticketId        String
-  ticket          SupportTicket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  senderType      SenderType
-  senderId        String         // userProfileId or admin userId
-  message         String         @db.Text
-  attachments     String[]       @default([])
-  createdAt       DateTime       @default(now())
-}
-
-model ProductReview {
-  id                  String         @id @default(uuid())
-  productId           String
-  product             Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
-  userProfileId       String?
-  userProfile         UserProfile?   @relation(fields: [userProfileId], references: [id], onDelete: SetNull)
-  rating              Int            // 1 to 5
-  title               String?
-  comment             String?        @db.Text
-  images              String[]       @default([])
-  isVerifiedPurchase  Boolean        @default(false)
-  status              ReviewStatus   @default(APPROVED) // Defaulting to approved for simplicity, or PENDING if we want strict moderation
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-}
-
-model SupportInfo {
-  id             String   @id @default(uuid())
-  type           String   @default("GENERAL") // e.g. "GENERAL", "SALES", "TECHNICAL"
-  email          String?
-  mobileNumber   String?
-  whatsappNumber String?
-  address        String?
-  operatingHours String?
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-}
-
-model Guide {
-  id        String   @id @default(uuid())
-  title     String
-  slug      String   @unique
-  category  String   // e.g. "NUTRITION", "WORKOUT", "WELLNESS"
-  image     String
-  videoUrl  String?
-  content   String   @db.Text
-  readTime  String
-  status    Boolean  @default(true)
-  author    String   @default("Admin")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 enum NotificationType {
   ORDER_UPDATE
   PROMO
   SYSTEM
-}
-
-model Notification {
-  id            String           @id @default(uuid())
-  userProfileId String
-  userProfile   UserProfile      @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
-  title         String
-  message       String           @db.Text
-  type          NotificationType @default(SYSTEM)
-  link          String?
-  isRead        Boolean          @default(false)
-  createdAt     DateTime         @default(now())
-}
-
-model PushSubscription {
-  id            String      @id @default(uuid())
-  userProfileId String
-  userProfile   UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
-  endpoint      String      @unique
-  p256dh        String
-  auth          String
-  userAgent     String?
-  createdAt     DateTime    @default(now())
 }
 
 enum CouponDiscountType {
@@ -632,47 +713,3 @@ enum CouponScopeType {
   PRODUCT
   SEASONAL
 }
-
-model Coupon {
-  id                    String             @id @default(uuid())
-  code                  String             @unique
-  title                 String
-  description           String?
-  discountType          CouponDiscountType @default(PERCENTAGE)
-  discountValue         Float
-  maxDiscountAmount     Float?
-  minOrderAmount        Float?             @default(0)
-  scopeType             CouponScopeType    @default(GENERAL)
-  applicableProductIds  String[]           @default([])
-  applicableCategoryIds String[]           @default([])
-  applicableBrandIds    String[]           @default([])
-  startDate             DateTime           @default(now())
-  endDate               DateTime
-  usageLimit            Int?
-  usageLimitPerUser     Int                @default(1)
-  usedCount             Int                @default(0)
-  isActive              Boolean            @default(true)
-  isPublic              Boolean            @default(true)
-  badgeText             String?
-  bannerText            String?
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
-  orders                Order[]
-  usages                CouponUsage[]
-}
-
-model CouponUsage {
-  id             String      @id @default(uuid())
-  couponId       String
-  coupon         Coupon      @relation(fields: [couponId], references: [id], onDelete: Cascade)
-  userProfileId  String
-  userProfile    UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
-  orderId        String?
-  order          Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  discountAmount Float
-  createdAt      DateTime    @default(now())
-
-  @@index([couponId, userProfileId])
-}
-
-

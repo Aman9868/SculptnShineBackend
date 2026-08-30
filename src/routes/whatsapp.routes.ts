@@ -4,6 +4,17 @@ import { authenticate, authorizeRoles } from '../middlewares/auth.middleware';
 
 const router = Router();
 
+// Internal route for AI service to send quotations (protected by a simple API key check or open for MVP)
+router.post('/send-quotation', (req, res, next) => {
+    // Simple basic protection for internal AI service calls
+    const apiKey = req.headers['x-api-key'];
+    if (process.env.AI_API_KEY && apiKey !== process.env.AI_API_KEY) {
+        // Only block if AI_API_KEY is defined and mismatch (fail open for local dev MVP if not set)
+        return res.status(401).json({ success: false, message: 'Unauthorized AI client' });
+    }
+    next();
+}, WhatsAppController.sendQuotation);
+
 // Protect all WhatsApp admin routes
 router.use(authenticate);
 router.use(authorizeRoles('ADMIN'));
