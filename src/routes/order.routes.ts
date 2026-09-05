@@ -11,6 +11,7 @@ router.use(authenticate);
 
 router.post('/', OrderController.createOrder);
 router.get('/my-orders', OrderController.getUserOrders);
+router.get('/latest', OrderController.getLatestOrder);
 router.get('/admin-all', authorizeRoles('ADMIN'), OrderController.getAdminOrders);
 router.get('/:id', OrderController.getOrderById);
 router.get('/:id/invoice', OrderController.downloadInvoice);

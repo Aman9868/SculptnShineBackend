@@ -38,6 +38,19 @@ export class OrderController {
     }
   }
 
+  static async getLatestOrder(req: Request, res: Response, next: NextFunction) {
+    try {
+      const order = await OrderService.trackOrder(undefined, undefined, req.user!.userId);
+      res.status(200).json({
+        success: true,
+        message: 'Latest order fetched successfully',
+        data: order,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getAdminOrders(req: Request, res: Response, next: NextFunction) {
     try {
       const page = parseInt(req.query.page as string) || 1;

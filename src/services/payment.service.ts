@@ -68,13 +68,12 @@ export class PaymentService {
       }
 
       if (paymentResult.isTestMode) {
-        // Automatically trigger simulated callback internally to process payment & clear cart
         setTimeout(() => {
           PaymentService.handlePhonePeCallback({
             merchantTransactionId,
             code: 'PAYMENT_SUCCESS',
-            transactionId: `SIMULATED_${Date.now()}`
-          }).catch(err => console.error('Internal simulated callback failed:', err));
+            transactionId: `SIMULATED_${Date.now()}`,
+          }).catch(err => console.error('Test payment callback failed:', err));
         }, 500);
       }
 
@@ -132,6 +131,18 @@ export class PaymentService {
 
     if (!payment) {
       throw createError(404, 'Payment record not found');
+    }
+
+    if (payment.status === 'COMPLETED' && payment.order.paymentStatus === 'COMPLETED') {
+      return { success: true, message: 'Payment was already completed', orderId: payment.orderId };
+    }
+
+    if (isSuccess && !phonepeConfig.isTestMode) {
+      const verifiedStatus = await phonepeClient.checkTransactionStatus(merchantTransactionId);
+      if (!verifiedStatus.success) {
+        isSuccess = false;
+        body = { ...body, verification: verifiedStatus.rawResponse || verifiedStatus };
+      }
     }
 
     if (isSuccess) {
@@ -302,9 +313,6 @@ export class PaymentService {
           userEmail: customerEmail,
         }
       );
-
-      // Restore stock on failed payment
-      await OrderService.updateOrderStatus(payment.orderId, 'CANCELLED');
 
       return { success: false, message: 'Payment failed', orderId: payment.orderId };
     }

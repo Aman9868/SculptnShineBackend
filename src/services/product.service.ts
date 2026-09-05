@@ -26,6 +26,7 @@ export class ProductService {
     subcategoryId?: string;
     subcategorySlug?: string;
     brandId?: string;
+    brandSlug?: string;
     status?: string;
     brand?: string;
     preference?: string;
@@ -48,6 +49,8 @@ export class ProductService {
       if (query.categorySlug) where.category = { slug: query.categorySlug };
       if (query.subcategoryId) where.subcategoryId = query.subcategoryId;
       if (query.subcategorySlug) where.subcategory = { slug: query.subcategorySlug };
+      if (query.brandId) where.brandId = query.brandId;
+      if (query.brandSlug) where.brand = { slug: query.brandSlug };
       
       const requestedStatus = query.status || 'ACTIVE';
       if (requestedStatus !== 'ALL') {
