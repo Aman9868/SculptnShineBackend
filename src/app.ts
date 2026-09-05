@@ -34,6 +34,7 @@ import { couponRoutes } from './routes/coupon.routes';
 import cacheRoutes from './routes/cache.routes';
 import resourceMetricsRoutes from './routes/resource-metrics.routes';
 import { integrationRoutes } from './routes/integration.routes';
+import searchRoutes from './routes/search.routes';
 import { HealthController } from './controllers/health.controller';
 import { requestContextMiddleware } from './config/request-context';
 import { WhatsAppSessionService } from './services/whatsapp-session.service';
@@ -127,6 +128,7 @@ app.use('/api/email-config', emailConfigRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/admin/cache', cacheRoutes);
 app.use('/api/system', resourceMetricsRoutes);
+app.use('/api/search', searchRoutes);
 
 // Health check endpoint
 app.get('/health', HealthController.checkHealth);

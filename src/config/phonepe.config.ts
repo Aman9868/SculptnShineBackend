@@ -29,7 +29,7 @@ const parseClientSecret = (secret?: string): string => {
 };
 
 export const phonepeConfig: PhonePeConfigType = {
-  isTestMode: process.env.PAYMENT_TEST_MODE !== 'false', // default to test mode if true or unset
+  isTestMode: process.env.PAYMENT_TEST_MODE !== 'false',
   clientId: process.env.PHONEPE_CLIENT_ID || process.env.PHONEPE_MERCHANT_ID || 'SU2606191700471590659908',
   clientSecret: parseClientSecret(process.env.PHONEPE_CLIENT_SECRET || process.env.PHONEPE_SALT_KEY || 'd4959e2b-0e37-4ae9-9698-5c58db27d201'),
   clientVersion: process.env.PHONEPE_CLIENT_VERSION || process.env.PHONEPE_SALT_INDEX || '1',

@@ -261,7 +261,18 @@ export class AuthService {
       throw { statusCode: 403, message: 'Admin accounts cannot be deleted directly' } as AppError;
     }
 
-    // Delete user (Prisma cascade removes userProfile, addresses, cart, etc.)
+    const orderCount = user.profile
+      ? await prisma.order.count({ where: { userProfileId: user.profile.id } })
+      : 0;
+
+    if (orderCount > 0) {
+      throw {
+        statusCode: 409,
+        message: 'This account cannot be deleted because it has order history. Please contact support to request data removal.',
+      } as AppError;
+    }
+
+    // Users without orders can be removed safely through the configured cascades.
     await prisma.user.delete({
       where: { id: userId },
     });

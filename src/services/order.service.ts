@@ -150,86 +150,6 @@ export class OrderService {
         },
       });
 
-      // Deduct inventory using FEFO (First-Expiry-First-Out)
-      for (const item of cart.items) {
-        if (item.variantId) {
-          const orderedVariant = await txDb.productVariant.findUnique({
-            where: { id: item.variantId },
-          });
-
-          if (orderedVariant) {
-            // Find all batches with the same flavor and weight ordered by earliest expiry first
-            const matchingBatches = await txDb.productVariant.findMany({
-              where: {
-                productId: item.productId,
-                flavor: orderedVariant.flavor,
-                weight: orderedVariant.weight,
-                stock: { gt: 0 },
-              },
-              orderBy: [
-                { expiryDate: 'asc' },
-                { createdAt: 'asc' },
-              ],
-            });
-
-            let remainingToDeduct = item.quantity;
-
-            if (matchingBatches.length > 0) {
-              for (const batch of matchingBatches) {
-                if (remainingToDeduct <= 0) break;
-                const deductQty = Math.min(batch.stock, remainingToDeduct);
-                await txDb.productVariant.update({
-                  where: { id: batch.id },
-                  data: { stock: { decrement: deductQty } },
-                });
-                remainingToDeduct -= deductQty;
-              }
-            } else {
-              await txDb.productVariant.update({
-                where: { id: orderedVariant.id },
-                data: { stock: { decrement: item.quantity } },
-              });
-            }
-          }
-        }
-
-        // Deduct parent product stock and recalculate earliest active expiry
-        const updatedParent = await txDb.product.update({
-          where: { id: item.productId },
-          data: {
-            stock: { decrement: item.quantity },
-          },
-          include: { variants: true },
-        });
-
-        const activeVariants = updatedParent.variants.filter((v: any) => v.stock > 0 && v.expiryDate);
-        if (activeVariants.length > 0) {
-          const earliest = new Date(Math.min(...activeVariants.map((v: any) => new Date(v.expiryDate).getTime())));
-          await txDb.product.update({
-            where: { id: item.productId },
-            data: {
-              expiryDate: earliest,
-              status: updatedParent.stock <= 0 ? 'OUT_OF_STOCK' : updatedParent.status,
-            },
-          });
-        } else if (updatedParent.stock <= 0) {
-          await txDb.product.update({
-            where: { id: item.productId },
-            data: { status: 'OUT_OF_STOCK' },
-          });
-        }
-
-        // Create inventory audit log
-        await txDb.inventoryLog.create({
-          data: {
-            productId: item.productId,
-            change: -item.quantity,
-            type: 'ORDER_FULFILLMENT',
-            reason: `Order #${newOrder.orderNumber} placed (FEFO inventory deduction)`,
-          },
-        }).catch(() => {});
-      }
-
       // Record coupon usage and increment count
       if (couponId) {
         await txDb.couponUsage.create({
@@ -429,9 +349,19 @@ export class OrderService {
     };
   }
 
-  static async trackOrder(orderNumber: string, emailOrPhone: string) {
-    const order = await prisma.order.findUnique({
-      where: { orderNumber },
+  static async trackOrder(orderNumber?: string, emailOrPhone?: string, userId?: string) {
+    const userProfile = userId
+      ? await prisma.userProfile.findUnique({ where: { userId } })
+      : null;
+
+    const order = await prisma.order.findFirst({
+      where: userId
+        ? {
+            userProfileId: userProfile?.id || 'not-found',
+            ...(orderNumber ? { OR: [{ id: orderNumber }, { orderNumber }] } : {}),
+          }
+        : { orderNumber },
+      orderBy: { createdAt: 'desc' },
       include: {
         userProfile: { include: { user: { select: { email: true } } } },
         items: { include: { product: { select: { title: true, images: true } } } },
@@ -443,10 +373,32 @@ export class OrderService {
       throw createError(404, 'Order not found with that Order ID.');
     }
 
+    if (userId) {
+      return {
+        orderNumber: order.orderNumber,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        createdAt: order.createdAt,
+        subTotalAmount: order.subTotalAmount,
+        shippingAmount: order.shippingAmount,
+        totalAmount: order.totalAmount,
+        trackingNumber: order.trackingNumber,
+        shippingName: order.shippingName,
+        statusHistory: order.statusHistory,
+        items: order.items.map(item => ({
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          image: item.product?.images?.[0] || null
+        }))
+      };
+    }
+
     const customerEmail = order.userProfile?.user?.email?.toLowerCase() || '';
     const customerPhone = order.userProfile?.phone || '';
     const shippingPhone = order.shippingPhone || '';
-    const input = emailOrPhone.toLowerCase().trim();
+    const input = (emailOrPhone || '').toLowerCase().trim();
 
     if (input !== customerEmail && input !== customerPhone && input !== shippingPhone) {
       throw createError(403, 'The Email or Phone number does not match our records for this order.');
@@ -465,6 +417,7 @@ export class OrderService {
       shippingName: order.shippingName,
       statusHistory: order.statusHistory,
       items: order.items.map(item => ({
+        productId: item.productId,
         productName: item.productName,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
