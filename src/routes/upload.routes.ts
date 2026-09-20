@@ -4,17 +4,40 @@ import path from 'path';
 import fs from 'fs';
 import { authenticate } from '../middlewares/auth.middleware';
 
+import os from 'os';
+
 const router = Router();
 
-// Ensure uploads directory exists
-const uploadDir = path.resolve(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Detect serverless environment (Vercel, AWS Lambda) where process.cwd() is read-only (/var/task)
+const isServerless = Boolean(
+  process.env.VERCEL || 
+  process.env.AWS_LAMBDA_FUNCTION_NAME || 
+  process.cwd().startsWith('/var/task')
+);
+
+// Fallback to os.tmpdir() in serverless environments to avoid ENOENT / EROFS read-only crashes
+const uploadDir = isServerless 
+  ? path.join(os.tmpdir(), 'uploads') 
+  : path.resolve(process.cwd(), 'uploads');
+
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (error) {
+  console.warn(`[Uploads] Notice: Could not create upload directory at ${uploadDir}:`, error);
 }
 
 // Configure multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    try {
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+    } catch {
+      // Safely ignore directory creation failure in Lambda
+    }
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {

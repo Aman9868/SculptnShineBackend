@@ -3,6 +3,7 @@ import puppeteer from 'puppeteer';
 import ejs from 'ejs';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import nodemailer from 'nodemailer';
 
 const createError = (statusCode: number, message: string) => {
@@ -52,9 +53,20 @@ export class InvoiceService {
 
     const html = await ejs.renderFile(templatePath, { order, config });
 
-    const invoicesDir = path.join(process.cwd(), 'public', 'invoices');
-    if (!fs.existsSync(invoicesDir)) {
-      fs.mkdirSync(invoicesDir, { recursive: true });
+    const isServerless = Boolean(
+      process.env.VERCEL || 
+      process.env.AWS_LAMBDA_FUNCTION_NAME || 
+      process.cwd().startsWith('/var/task')
+    );
+    const invoicesDir = isServerless
+      ? path.join(os.tmpdir(), 'invoices')
+      : path.join(process.cwd(), 'public', 'invoices');
+    try {
+      if (!fs.existsSync(invoicesDir)) {
+        fs.mkdirSync(invoicesDir, { recursive: true });
+      }
+    } catch (err) {
+      console.warn('[Invoice] Notice: Could not create invoices directory:', err);
     }
 
     const fileName = `invoice-${order.orderNumber}.pdf`;

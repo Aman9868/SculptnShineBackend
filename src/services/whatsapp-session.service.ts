@@ -9,6 +9,7 @@ import pino from 'pino';
 import QRCode from 'qrcode';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import { Boom } from '@hapi/boom';
 
 export type WhatsAppConnectionStatus = 'DISCONNECTED' | 'CONNECTING' | 'SCAN_QR' | 'CONNECTED';
@@ -30,7 +31,13 @@ export class WhatsAppSessionService {
   private static isInitializing: boolean = false;
   private static reconnectAttempts: number = 0;
   private static maxReconnectAttempts: number = 10;
-  private static authDir: string = path.join(process.cwd(), 'storage', 'whatsapp_auth');
+  private static authDir: string = (
+    process.env.VERCEL || 
+    process.env.AWS_LAMBDA_FUNCTION_NAME || 
+    process.cwd().startsWith('/var/task')
+  )
+    ? path.join(os.tmpdir(), 'whatsapp_auth')
+    : path.join(process.cwd(), 'storage', 'whatsapp_auth');
   private static isAutomationEnabled: boolean = true;
 
   /**

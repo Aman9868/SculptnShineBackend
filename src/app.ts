@@ -43,17 +43,32 @@ import './workers/notification.worker'; // Initialize BullMQ notification worker
 import './workers/maintenance.worker'; // Initialize BullMQ maintenance worker
 import './workers/replenishment.worker'; // Initialize BullMQ replenishment worker
 
-// Initialize WhatsApp direct multi-device session
-WhatsAppSessionService.init().catch(err => {
-  console.error('[WhatsApp] Background initialization error:', err);
-});
+import os from 'os';
 
-// Initialize automated BullMQ background log retention scheduler (Runs daily at 03:00 AM)
-initMaintenanceScheduler();
+// Detect serverless environment (Vercel, AWS Lambda) where filesystem is read-only (/var/task)
+const isServerless = Boolean(
+  process.env.VERCEL || 
+  process.env.AWS_LAMBDA_FUNCTION_NAME || 
+  process.cwd().startsWith('/var/task')
+);
 
-// Initialize automated BullMQ replenishment scheduler (Runs daily at 10:00 AM)
-initReplenishmentScheduler();
+// Only initialize persistent background socket connections and workers outside serverless
+if (!isServerless) {
+  // Initialize WhatsApp direct multi-device session
+  WhatsAppSessionService.init().catch(err => {
+    console.error('[WhatsApp] Background initialization error:', err);
+  });
 
+  // Initialize automated BullMQ background log retention scheduler (Runs daily at 03:00 AM)
+  initMaintenanceScheduler().catch(err => {
+    console.warn('[BullMQ] Maintenance scheduler warning:', err);
+  });
+
+  // Initialize automated BullMQ replenishment scheduler (Runs daily at 10:00 AM)
+  initReplenishmentScheduler().catch(err => {
+    console.warn('[BullMQ] Replenishment scheduler warning:', err);
+  });
+}
 
 const app = express();
 
@@ -63,9 +78,16 @@ app.use(express.json());
 app.use(requestContextMiddleware);
 
 // Serve static files from 'uploads' directory with CORS and fallback
-const uploadsPath = path.resolve(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsPath)) {
-  fs.mkdirSync(uploadsPath, { recursive: true });
+const uploadsPath = isServerless 
+  ? path.join(os.tmpdir(), 'uploads') 
+  : path.resolve(process.cwd(), 'uploads');
+
+try {
+  if (!fs.existsSync(uploadsPath)) {
+    fs.mkdirSync(uploadsPath, { recursive: true });
+  }
+} catch (error) {
+  console.warn(`[App] Notice: Could not create uploads directory at ${uploadsPath}:`, error);
 }
 
 app.use('/uploads', express.static(uploadsPath, {
@@ -86,9 +108,16 @@ app.use('/uploads', (req: Request, res: Response) => {
 });
 
 // Serve invoices from the 'public/invoices' directory
-const invoicesPath = path.resolve(process.cwd(), 'public/invoices');
-if (!fs.existsSync(invoicesPath)) {
-  fs.mkdirSync(invoicesPath, { recursive: true });
+const invoicesPath = isServerless
+  ? path.join(os.tmpdir(), 'invoices')
+  : path.resolve(process.cwd(), 'public/invoices');
+
+try {
+  if (!fs.existsSync(invoicesPath)) {
+    fs.mkdirSync(invoicesPath, { recursive: true });
+  }
+} catch (error) {
+  console.warn(`[App] Notice: Could not create invoices directory at ${invoicesPath}:`, error);
 }
 app.use('/invoices', express.static(invoicesPath, {
   setHeaders: (res) => {
