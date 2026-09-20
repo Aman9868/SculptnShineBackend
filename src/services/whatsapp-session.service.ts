@@ -1,10 +1,3 @@
-import makeWASocket, {
-  DisconnectReason,
-  useMultiFileAuthState,
-  WASocket,
-  fetchLatestBaileysVersion,
-  proto,
-} from '@whiskeysockets/baileys';
 import pino from 'pino';
 import QRCode from 'qrcode';
 import path from 'path';
@@ -22,7 +15,7 @@ export interface WhatsAppConnectedInfo {
 }
 
 export class WhatsAppSessionService {
-  private static socket: WASocket | null = null;
+  private static socket: any = null;
   private static status: WhatsAppConnectionStatus = 'DISCONNECTED';
   private static qrCodeString: string | null = null;
   private static qrCodeDataUrl: string | null = null;
@@ -77,6 +70,19 @@ export class WhatsAppSessionService {
         fs.mkdirSync(this.authDir, { recursive: true });
       }
 
+      let baileysModule: any;
+      try {
+        baileysModule = await (new Function('m', 'return import(m)')('@whiskeysockets/baileys') as Promise<any>);
+      } catch (importErr) {
+        console.warn('[WhatsApp] Baileys library could not be dynamically imported (unsupported on serverless):', importErr);
+        this.status = 'DISCONNECTED';
+        this.isInitializing = false;
+        return;
+      }
+
+      const makeWASocket = baileysModule.default || baileysModule.makeWASocket;
+      const { useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason } = baileysModule;
+
       const { state, saveCreds } = await useMultiFileAuthState(this.authDir);
       const { version } = await fetchLatestBaileysVersion().catch(() => ({
         version: [2, 3000, 1015901307] as [number, number, number],
@@ -106,7 +112,7 @@ export class WhatsAppSessionService {
       this.socket.ev.on('creds.update', saveCreds);
 
       // Connection update handler
-      this.socket.ev.on('connection.update', async (update) => {
+      this.socket.ev.on('connection.update', async (update: any) => {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
