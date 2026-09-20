@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { OrderService } from '../services/order.service';
-import puppeteer from 'puppeteer';
 import { prisma } from '../config/prisma';
 import fs from 'fs';
 import path from 'path';
@@ -403,23 +402,45 @@ export class OrderController {
         </html>
       `;
 
+      let puppeteer: any;
+      try {
+        const puppeteerModule = await (new Function('m', 'return import(m)')('puppeteer') as Promise<any>);
+        puppeteer = puppeteerModule.default || puppeteerModule;
+      } catch (importErr) {
+        console.warn('[OrderController] Puppeteer is unavailable in this runtime environment:', importErr);
+        return res.status(503).json({
+          success: false,
+          message: 'PDF generation is unavailable in this serverless environment.'
+        });
+      }
+
       const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH ||
         (fs.existsSync('/usr/bin/chromium-browser') ? '/usr/bin/chromium-browser' :
           fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
 
-      const browser = await puppeteer.launch({
-        headless: true,
-        executablePath,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-        ],
-      });
+      let browser: any;
+      try {
+        browser = await puppeteer.launch({
+          headless: true,
+          executablePath,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+          ],
+        });
+      } catch (launchErr) {
+        console.warn('[OrderController] Failed to launch Chromium browser:', launchErr);
+        return res.status(503).json({
+          success: false,
+          message: 'Chromium binary is unavailable on this serverless instance.'
+        });
+      }
+
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'load' });
       const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '10mm', bottom: '10mm', left: '10mm', right: '10mm' } });

@@ -1,5 +1,4 @@
 import { prisma } from '../config/prisma';
-import puppeteer from 'puppeteer';
 import ejs from 'ejs';
 import path from 'path';
 import fs from 'fs';
@@ -72,23 +71,38 @@ export class InvoiceService {
     const fileName = `invoice-${order.orderNumber}.pdf`;
     const filePath = path.join(invoicesDir, fileName);
 
+    let puppeteer: any;
+    try {
+      const puppeteerModule = await (new Function('m', 'return import(m)')('puppeteer') as Promise<any>);
+      puppeteer = puppeteerModule.default || puppeteerModule;
+    } catch (importErr) {
+      console.warn('[InvoiceService] Puppeteer dynamic import failed (unsupported in serverless environment):', importErr);
+      throw createError(503, 'PDF invoice generation is unavailable in this environment');
+    }
+
     const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH ||
       (fs.existsSync('/usr/bin/chromium-browser') ? '/usr/bin/chromium-browser' :
         fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      executablePath,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-      ],
-    });
+    let browser: any;
+    try {
+      browser = await puppeteer.launch({
+        headless: true,
+        executablePath,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+        ],
+      });
+    } catch (launchErr) {
+      console.warn('[InvoiceService] Chromium browser launch failed:', launchErr);
+      throw createError(503, 'Chromium binary is unavailable on this instance');
+    }
 
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'load' });
