@@ -9,20 +9,38 @@ const REDIS_PASSWORD = process.env.REDIS_PASSWORD || undefined;
 const REDIS_DB = parseInt(process.env.REDIS_DB || '0', 10);
 const REDIS_KEY_PREFIX = process.env.REDIS_KEY_PREFIX || 'sns:';
 
+const isServerless = Boolean(
+  process.env.VERCEL || 
+  process.env.AWS_LAMBDA_FUNCTION_NAME || 
+  process.cwd().startsWith('/var/task')
+);
+
+const hasCustomRedis = Boolean(
+  (process.env.REDIS_HOST && process.env.REDIS_HOST !== 'localhost' && process.env.REDIS_HOST !== '127.0.0.1') || 
+  process.env.REDIS_URL
+);
+
 export const baseRedisOptions: RedisOptions = {
   host: REDIS_HOST,
   port: REDIS_PORT,
   password: REDIS_PASSWORD,
   db: REDIS_DB,
-  enableReadyCheck: true,
-  lazyConnect: false,
-  maxRetriesPerRequest: 3,
+  enableReadyCheck: !isServerless,
+  lazyConnect: true,
+  maxRetriesPerRequest: isServerless ? 1 : 3,
   retryStrategy(times: number) {
+    if (isServerless && !hasCustomRedis) {
+      return null; // Immediately fail-open in serverless without blocking or looping
+    }
+    if (isServerless && times > 2) {
+      return null;
+    }
     // Exponential backoff with jitter, capped at 3000ms
     const delay = Math.min(times * 100, 3000);
     return delay;
   },
   reconnectOnError(err: Error) {
+    if (isServerless && !hasCustomRedis) return false;
     const targetError = 'READONLY';
     if (err.message.includes(targetError)) {
       // Reconnect when Redis is in READONLY mode (e.g. failover)
@@ -45,6 +63,10 @@ export const createRedisClient = (customOptions: Partial<RedisOptions> = {}): Re
   const client = new Redis(options);
 
   client.on('error', (err) => {
+    if (isServerless && !hasCustomRedis) {
+      // Fail-open quietly in serverless without flooding logs
+      return;
+    }
     console.error(`[Redis] Connection error (${options.host}:${options.port}):`, err.message);
   });
 

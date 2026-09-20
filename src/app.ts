@@ -39,10 +39,6 @@ import { HealthController } from './controllers/health.controller';
 import { requestContextMiddleware } from './config/request-context';
 import { WhatsAppSessionService } from './services/whatsapp-session.service';
 import { initMaintenanceScheduler, initReplenishmentScheduler } from './config/queue';
-import './workers/notification.worker'; // Initialize BullMQ notification worker
-import './workers/maintenance.worker'; // Initialize BullMQ maintenance worker
-import './workers/replenishment.worker'; // Initialize BullMQ replenishment worker
-
 import os from 'os';
 
 // Detect serverless environment (Vercel, AWS Lambda) where filesystem is read-only (/var/task)
@@ -58,6 +54,11 @@ if (!isServerless) {
   WhatsAppSessionService.init().catch(err => {
     console.error('[WhatsApp] Background initialization error:', err);
   });
+
+  // Initialize BullMQ workers
+  import('./workers/notification.worker').catch(err => console.warn('[BullMQ] Notification worker error:', err));
+  import('./workers/maintenance.worker').catch(err => console.warn('[BullMQ] Maintenance worker error:', err));
+  import('./workers/replenishment.worker').catch(err => console.warn('[BullMQ] Replenishment worker error:', err));
 
   // Initialize automated BullMQ background log retention scheduler (Runs daily at 03:00 AM)
   initMaintenanceScheduler().catch(err => {
